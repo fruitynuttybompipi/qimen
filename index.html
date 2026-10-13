@@ -1816,6 +1816,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         work: {
           label: "Work",
           door: "开",
+          relDoor: 1,
           boss: 1,
           env: 1,
           extra: [
@@ -1837,6 +1838,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         career: {
           label: "Career",
           door: "开",
+          relDoor: 1,
           boss: 1,
           env: 1,
           noun: "your career move",
@@ -2012,30 +2014,31 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           sum += score(p) * wt;
           w += wt;
         });
-        // Asker (day stem) against outcome (hour stem). The outcome box decides what you can get.
+        // Asker (day stem) against the target palace. For job and work questions the target is the
+        // Open door (the job itself); otherwise it is the hour stem (the outcome).
+        const relP = T.relDoor ? doorP : matterP,
+          N = T.relDoor ? "the job" : "the outcome";
         let relTxt = "";
-        if (!T.soft && matterP && selfP && matterP != 5 && selfP != 5) {
+        if (!T.soft && relP && selfP && relP != 5 && selfP != 5) {
           const a = PE[selfP],
-            b = PE[matterP];
+            b = PE[relP];
           let R = null;
-          if (matterP === selfP)
-            R = [
-              3,
-              "You and the outcome share a palace: you may already have what you are asking for.",
-            ];
-          else if (a === b)
-            R = [3, "Asker and outcome share an element: the result is within reach."];
-          else if (GEN[b] === a) R = [4, "The outcome feeds you: you can get it."];
-          else if (BEATS[b] === a) R = [-4, "The outcome presses on you: you cannot get it."];
+          if (relP === selfP)
+            R = [3, `You and ${N} share a palace: you may already have what you are asking for.`];
+          else if (a === b) R = [3, `You and ${N} share an element: the result is within reach.`];
+          else if (GEN[b] === a)
+            R = [4, `${N[0].toUpperCase() + N.slice(1)} feeds you: you can get it.`];
+          else if (BEATS[b] === a)
+            R = [-4, `${N[0].toUpperCase() + N.slice(1)} presses on you: you cannot get it.`];
           else if (GEN[a] === b)
             R = [
               -1,
-              "You feed the outcome: very hard, and it will cost you a lot of effort. Worth it only if the outcome palace looks good.",
+              `You feed ${N}: very hard, and it will cost you a lot of effort. Worth it only if its palace looks good.`,
             ];
           else if (BEATS[a] === b)
             R = [
-              score(selfP) > score(matterP) ? 1 : -1,
-              "You press on the outcome: you can get it, but only by giving something up. That is more likely when your own palace is stronger than the outcome palace.",
+              score(selfP) > score(relP) ? 1 : -1,
+              `You press on ${N}: you can get it, but only by giving something up, such as effort. That is more likely when your own palace is stronger than its palace.`,
             ];
           if (R) {
             sum += R[0] * 1.5;
@@ -2062,6 +2065,12 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           if (nw)
             sumTxt +=
               ` The new setting feels ${nw}` + (cu ? `; your current one feels ${cu}.` : ".");
+        }
+        if (T.boss) {
+          const bp = +Object.keys(P).find((p) => p != 5 && DK[P[p].deity] === "符");
+          if (bp && bp === selfP)
+            sumTxt +=
+              " Your boss or superior (the Chief) is in your own palace, so they are likely to back you.";
         }
         if (ASKY) sumTxt += ` Read for someone born in ${ASKY} (stem ${yearStem(ASKY)}).`;
         if (T.med) {
@@ -2098,7 +2107,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
                     : `The ${EN[o.gate]} door, which shows ${role}, lands here`);
           why.push({
             palace: p,
-            point: `${lead}, bringing ${DT[g]}. The star adds ${SX[skey(o)]}, and the deity adds ${DX[DK[o.deity]]}. Overall ${qual(score(p))}${flags(p)}.${role === "matter" ? relTxt : ""}`,
+            point: `${lead}, bringing ${DT[g]}. The star adds ${SX[skey(o)]}, and the deity adds ${DX[DK[o.deity]]}. Overall ${qual(score(p))}${flags(p)}.${role === (T.relDoor ? "topic" : "matter") ? relTxt : ""}`,
           });
         });
         const all = Object.keys(P)
