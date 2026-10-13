@@ -1193,6 +1193,31 @@
       .hc {
         animation: pop 0.4s both;
       }
+      /* ══ 7. SHEET CLOSE BUTTONS ══ */
+      .pn .x {
+        position: sticky;
+        top: 0;
+        float: right;
+        z-index: 1;
+        width: 36px;
+        height: 36px;
+        margin: -4px -6px 0 8px;
+        padding: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--line);
+        border-radius: 50%;
+        background: var(--card);
+        color: var(--ink);
+        font-size: 22px;
+        line-height: 1;
+        cursor: pointer;
+        transition: transform 0.15s;
+      }
+      .pn .x:active {
+        transform: scale(0.92);
+      }
     </style>
   </head>
   <body>
@@ -1304,6 +1329,7 @@
     <div class="sheet" id="sheet" hidden>
       <div class="bk" id="bk"></div>
       <div class="pn">
+        <button class="x" data-close aria-label="Close">×</button>
         <h3 id="sh-t"></h3>
         <div id="sh-b"></div>
       </div>
@@ -1591,6 +1617,7 @@ ${l[2]}`:l[2]},k1=H.map(m=>({diPan:Q[m]??""})),A1=x1.map(m=>{let C=L(s.jiuXing,m
             ? `<div class="tg">${o.tags.map((t) => `<div>• ${t}</div>`).join("")}</div>`
             : "");
         if (MODE === "beginner") $("sh-b").innerHTML = explain(p) + $("sh-b").innerHTML;
+        $("sh-b").innerHTML += '<button class="btn g wide" data-close>Close</button>';
         $("sheet").hidden = false;
       }
       // Switches between the Chart tab and the second tab.
@@ -2135,8 +2162,9 @@ ${l[2]}`:l[2]},k1=H.map(m=>({diPan:Q[m]??""})),A1=x1.map(m=>{let C=L(s.jiuXing,m
         setTimeout(() => el.classList.remove("flash"), 2200);
       }
       // Fills and opens a bottom sheet.
+      const CLOSE_X = '<button class="x" data-close aria-label="Close">×</button>';
       const openSheet = (id, html) => {
-        $(id + "-b").innerHTML = html;
+        $(id + "-b").innerHTML = CLOSE_X + html;
         $(id).hidden = false;
       };
       // Shows or hides beginner-only parts.
@@ -2574,6 +2602,16 @@ ${l[2]}`:l[2]},k1=H.map(m=>({diPan:Q[m]??""})),A1=x1.map(m=>{let C=L(s.jiuXing,m
         const b = e.target.closest("[data-p]");
         if (b) sheet(+b.dataset.p);
       };
+      // Close a bottom sheet (settings, guide/glossary or palace detail).
+      function closeSheet(id) {
+        $(id).hidden = true;
+        if (id === "gd") markSeen();
+      }
+      ["set", "gd", "sheet"].forEach((id) => {
+        $(id).onclick = (e) => {
+          if (e.target.closest && e.target.closest("[data-close]")) closeSheet(id);
+        };
+      });
       $("bk").onclick = () => {
         $("sheet").hidden = true;
       };
