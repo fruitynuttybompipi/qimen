@@ -978,6 +978,23 @@
         display: flex;
         flex-direction: column;
       }
+      #forms {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        margin: 0 0 10px;
+      }
+      #forms:empty {
+        display: none;
+      }
+      #forms .dr {
+        border-left-color: var(--gold);
+      }
+      .fnote {
+        margin: 0;
+        font-size: 11.5px;
+        color: var(--mut);
+      }
       .dr.bad {
         border-left-color: var(--acc);
       }
@@ -1264,6 +1281,7 @@
           ><span class="bw2"><i class="wst"></i>Weakest</span>
         </div>
         <div id="dirs"></div>
+        <div id="forms"></div>
         <div id="bt">
           <div class="bth">
             <b
@@ -1406,11 +1424,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function build(r) {
         const raw = r.raw,
           P = {},
-          dm = {},
           tm = {},
           dn = (d) => (r.isYinDun ? d : { 白虎: "勾陈", 玄武: "朱雀" }[d] || d);
         r.baseOrder.forEach((p, i) => {
-          dm[p] = r.dayMarkerArr[i];
           tm[p] = r.timeMarkerArr[i];
         });
         for (let p = 1; p <= 9; p++) {
@@ -1425,10 +1441,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             tags: [],
           };
           if (p != 5) {
-            if (dm[p] === "空") o.tags.push("Day void 日空");
-            if (dm[p] === "马") o.tags.push("Day horse 日马");
-            if (tm[p] === "空") o.tags.push("Hour void 时空");
-            if (tm[p] === "马") o.tags.push("Hour horse 时马");
+            // Void and horse come from the HOUR pillar only; a palace can carry both marks.
+            if (tm[p].includes("空")) o.tags.push("Hour void 时空");
+            if (tm[p].includes("马")) o.tags.push("Hour horse 时马");
             if (o.gate) {
               const ge = GE[o.gate[0]],
                 pe = PE[p],
@@ -1745,8 +1760,10 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         雀: "gossip, paperwork and disputes",
       };
       const DS = { 开: 3, 休: 3, 生: 3, 景: 1, 杜: 0, 伤: -2, 死: -3, 惊: -2 },
-        SS = { 辅: 2, 心: 2, 任: 2, 冲: 1, 英: -1, 禽芮: -1, 蓬: -2, 芮: -2, 柱: -2 },
-        DD = { 符: 2, 合: 2, 天: 1, 地: 1, 阴: 1, 蛇: -1, 玄: -1, 陈: -1, 雀: -1, 虎: -2 };
+        SS = { 辅: 2, 心: 2, 任: 2, 冲: 0, 英: 0, 芮: 0, 禽芮: 1, 蓬: -1, 柱: -1 },
+        DD = { 符: 2, 合: 2, 天: 2, 地: 2, 阴: 1, 蛇: -2, 玄: -2, 陈: -2, 雀: -1, 虎: -2 },
+        // Heaven-plate stems (the people realm): Geng is the enemy of Jia; Yi, Bing, Ding, Wu help.
+        ST = { 甲: 1, 乙: 1, 丙: 1, 丁: 1, 戊: 1, 己: -1, 庚: -2, 辛: -1, 壬: -1, 癸: 0 };
       // Topics. door = main door read; extra = further doors; selfW = weight of your own palace;
       // soft = gentle wording (wellbeing).
       const TOP = {
@@ -1778,6 +1795,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         money: {
           label: "Money",
           door: "生",
+          stem: ["戊", "capital"],
           noun: "this money matter",
           area: "income, growth and wealth",
         },
@@ -1810,10 +1828,12 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         if (/Door compel/.test(T)) f *= 0.6;
         if (/Palace compel/.test(T)) f *= 0.4;
         let s = (DS[o.gate[0]] || 0) * f + (SS[skey(o)] || 0) + (DD[DK[o.deity]] || 0);
+        s += ST[sp2(o.tian).m] || 0;
         if (/Fu Yin/.test(T)) s -= 1;
         if (/Fan Yin/.test(T)) s -= 2;
         if (/Punishment/.test(T)) s -= 1;
         if (/feeds/.test(T) && DS[o.gate[0]] > 0) s += 0.5;
+        if (/void/.test(T)) s *= 0.5; // void: the result is reduced, good or bad
         return s;
       }
       // Score to a word: strong, good, fair, weak, poor.
@@ -1916,6 +1936,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               1.5,
             ]),
           )
+          .concat(T.stem ? [[hp(T.stem[0]), T.stem[1], 1.5]] : [])
           .filter((x) => x[0] && x[0] != 5);
         let sum = 0,
           w = 0;
@@ -1923,9 +1944,30 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           sum += score(p) * wt;
           w += wt;
         });
+        // Asker (day stem) against outcome (hour stem): does the outcome feed or press you?
+        let relTxt = "";
+        if (!T.soft && matterP && selfP && matterP != selfP && matterP != 5 && selfP != 5) {
+          const a = PE[selfP],
+            b = PE[matterP];
+          const R =
+            GEN[b] === a
+              ? [4, "The outcome feeds you, a positive sign."]
+              : BEATS[b] === a
+                ? [-4, "The outcome presses on you, a negative sign."]
+                : GEN[a] === b
+                  ? [2, "You feed the outcome: it can work, but it will take effort."]
+                  : BEATS[a] === b
+                    ? [-2, "You press on the outcome: it is hard to obtain."]
+                    : null;
+          if (R) {
+            sum += R[0] * 1.5;
+            w += 1.5;
+            relTxt = " " + R[1];
+          }
+        }
         const avg = sum / w;
         const fy = keys.some(([p]) => /Fu Yin|Fan Yin/.test(P[p].tags.join()));
-        let v = avg >= 3 ? "Favorable" : avg >= -0.5 ? "Mixed" : "Unfavorable";
+        let v = avg >= 3.5 ? "Favorable" : avg >= -0.5 ? "Mixed" : "Unfavorable";
         if (fy && v !== "Unfavorable") v = "Wait";
         const head = {
           Favorable: `Conditions look supportive for ${T.noun}.`,
@@ -1952,12 +1994,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               ? `The ${EN[o.gate]} door lands here`
               : role === "matter"
                 ? "The matter itself sits here"
-                : role === "you"
-                  ? "You (the day stem) sit here"
-                  : `The ${EN[o.gate]} door, which shows ${role}, lands here`;
+                : role === "capital"
+                  ? "Wu, the stem for your capital, sits here"
+                  : role === "you"
+                    ? "You (the day stem) sit here"
+                    : `The ${EN[o.gate]} door, which shows ${role}, lands here`;
           why.push({
             palace: p,
-            point: `${lead}, bringing ${DT[g]}. The star adds ${SX[skey(o)]}, and the deity adds ${DX[DK[o.deity]]}. Overall ${qual(score(p))}${flags(p)}.`,
+            point: `${lead}, bringing ${DT[g]}. The star adds ${SX[skey(o)]}, and the deity adds ${DX[DK[o.deity]]}. Overall ${qual(score(p))}${flags(p)}.${role === "matter" ? relTxt : ""}`,
           });
         });
         const all = Object.keys(P)
@@ -2002,7 +2046,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
                 `P${p} ${PAL[p][0]} ${PE[p]} (${role}): ${P[p].deity} ${P[p].star} ${P[p].gate} | heaven ${P[p].tian} earth ${P[p].di} | ${P[p].tags.join(", ") || "no marks"} | score ${score(p).toFixed(1)}`,
             )
             .join("\n") +
-          `\nWeighted score ${avg.toFixed(1)}. Rules: classical door, star and deity ratings, reduced by Door and Palace compel, adjusted for Fu Yin, Fan Yin, punishment and void.`;
+          `\nWeighted score ${avg.toFixed(1)}. Rules: door, star, deity and stem ratings from the course notes, reduced by Door and Palace compel, adjusted for Fu Yin, Fan Yin, punishment and void.`;
         const R = {
           verdict: v,
           headline: head,
@@ -2045,12 +2089,15 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           const o = P[p];
           s += `Palace ${p} ${PAL[p][0]} (${PAL[p][1]}, ${PE[p]}): deity ${o.deity}, star ${o.star}, gate ${o.gate}, heaven stem ${o.tian}, earth stem ${o.di}${o.an ? ", hidden stem " + o.an : ""}${o.tags.length ? "; marks: " + o.tags.join(", ") : ""}\n`;
         }
+        const FL = formList();
+        if (FL.length)
+          s += `Special formations present: ${FL.map(([k, p]) => FM[k][0] + " in palace " + p).join("; ")}.\n`;
         return s + `Center 5: earth stem ${P[5].di}, lodged in palace 2.`;
       }
       // Copies the chart and your question to the clipboard.
       function copyPrompt() {
         const q = $("q").value.trim() || "(write your question here)";
-        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
+        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
         const done = () => {
           const b = $("copy");
           b.textContent = "Copied. Paste it into Claude.";
@@ -2410,6 +2457,53 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           W: "West",
           NW: "North-west",
         };
+
+      // Special formations. Criteria follow the course notes; the wording is my own.
+      // Their strength also depends on the 7 Star Path, which this page does not calculate.
+      const FM = {
+        gd: [
+          "Green Dragon Returns 青龙返首",
+          "The strongest winning setup. Act from this direction.",
+        ],
+        bd: ["Flying Bird Fall into Cave 飞鸟跌穴", "Good when you want things to come to you."],
+        jm: [
+          "Jade Maiden Watching the Door 玉女守门",
+          "Good for money asks, permits and quiet control.",
+        ],
+        rd: ["Real Deception 真诈", "A hidden fact comes out at the turning point."],
+        dd: ["Double Deception 重诈", "Turns a trap back on whoever set it."],
+        nd: ["Nobility Deception 休诈", "A senior person steps in when you are cornered."],
+      };
+      // Returns [[key, palace]] for every formation found on the board.
+      function formList() {
+        const i = chart.info,
+          lead = i.xunshou.slice(-1),
+          shiName = i.shi.replace("值使：", ""),
+          out = [];
+        for (const p of [1, 2, 3, 4, 6, 7, 8, 9]) {
+          const o = P[p],
+            dk = DK[o.deity],
+            g = o.gate && o.gate[0];
+          if (o.tian.includes(lead) && o.di.includes("丙")) out.push(["gd", p]);
+          if (o.tian.includes("丙") && o.di.includes(lead)) out.push(["bd", p]);
+          if ((o.tian.includes("丁") || o.di.includes("丁")) && o.gate === shiName)
+            out.push(["jm", p]);
+          if (dk === "阴" && o.tian.includes("丙") && g === "开") out.push(["rd", p]);
+          if (dk === "地" && o.tian.includes("丁") && g === "休") out.push(["dd", p]);
+          if (dk === "合" && o.tian.includes("乙") && g === "生") out.push(["nd", p]);
+        }
+        return out;
+      }
+      function showForms() {
+        const L = formList();
+        $("forms").innerHTML = L.length
+          ? L.map(
+              ([k, p]) =>
+                `<button class="dr" data-f="${p}"><span>${COMPI}Special formation</span><b>${FM[k][0]}</b><em>${DN[PAL[p][1]]} · palace ${p} · ${FM[k][1]}</em></button>`,
+            ).join("") +
+            '<p class="fnote">Strength also depends on the 7 Star Path, which this page does not calculate.</p>'
+          : "";
+      }
       // How the palace element and door element relate (feeds / presses).
       function ELM(p) {
         const o = P[p],
@@ -2461,16 +2555,19 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           mt = "; the palace for your matter (palace " + mp + ") looks " + qual(score(mp)) + pr;
         }
         $("oneline").textContent = ov + mt + ".";
+        showForms();
         const dr = (c, l, p) =>
           `<button class="dr${c}" data-f="${p}"><span>${COMPI}${l}</span><b>${DN[PAL[p][1]]}</b><em>palace ${p} · ${nm(p)}</em></button>`;
         $("dirs").innerHTML =
           (best[1] >= 2 ? dr("", "Best direction", best[0]) : "") +
           (worst[1] < 0 ? dr(" bad", "Direction to avoid", worst[0]) : "");
       }
-      $("dirs").onclick = (e) => {
-        const b = e.target.closest && e.target.closest("[data-f]");
-        if (b) flash(+b.dataset.f);
-      };
+      ["dirs", "forms"].forEach((id) => {
+        $(id).onclick = (e) => {
+          const b = e.target.closest && e.target.closest("[data-f]");
+          if (b) flash(+b.dataset.f);
+        };
+      });
       let BTK = "career";
       const SH = { Favorable: "Good", Mixed: "Mixed", Wait: "Wait", Unfavorable: "Avoid" };
       // Rates the day's twelve two-hour windows for the chosen topic.
