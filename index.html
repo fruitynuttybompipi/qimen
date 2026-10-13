@@ -1,12 +1,13 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Qimen Dunjia (static)</title>
+<meta name="description" content="Cast a Qimen Dunjia (奇门遁甲) hour chart for any time and get clear, plain-English readings on career, money, relationships and more.">
+<title>QMDJ</title>
 <style>
-:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2f4f9;--card:#fff;--ink:#15171f;--mut:#7b8194;--line:#e3e7f0;--acc:#d6403a;--ok:#1f8f5f;--gd:#c28a1e;--br:#4f46e5;--br2:#7c5cff}
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f2f4f9;--card:#fff;--ink:#15171f;--mut:#7b8194;--line:#e3e7f0;--acc:#d6403a;--ok:#1f8f5f;--gd:#c28a1e;--br:#1e3a8a;--br2:#2f5fd0}
 html{scroll-padding-top:env(safe-area-inset-top,0px)}
-@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1018;--card:#181b27;--ink:#eceef6;--mut:#8d93a8;--line:#262a3a;--acc:#ff7a70;--ok:#4fd0a0;--gd:#e0b24a;--br:#8b8bff;--br2:#b08cff}}
-:root[data-theme="dark"]{--bg:#0e1018;--card:#181b27;--ink:#eceef6;--mut:#8d93a8;--line:#262a3a;--acc:#ff7a70;--ok:#4fd0a0;--gd:#e0b24a;--br:#8b8bff;--br2:#b08cff}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0e1018;--card:#181b27;--ink:#eceef6;--mut:#8d93a8;--line:#262a3a;--acc:#ff7a70;--ok:#4fd0a0;--gd:#e0b24a;--br:#5b8def;--br2:#7fa8ff}}
+:root[data-theme="dark"]{--bg:#0e1018;--card:#181b27;--ink:#eceef6;--mut:#8d93a8;--line:#262a3a;--acc:#ff7a70;--ok:#4fd0a0;--gd:#e0b24a;--br:#5b8def;--br2:#7fa8ff}
 *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{height:100%;margin:0}
 body{background:var(--bg);color:var(--ink);font:15px/1.5 -apple-system,"Segoe UI","Noto Sans SC",Roboto,sans-serif}
 .app{height:100%;max-width:520px;margin:0 auto;display:flex;flex-direction:column}
@@ -22,7 +23,7 @@ input,textarea,button{font:inherit;color:var(--ink)}
 .grid{display:grid;grid-template-columns:20px repeat(3,minmax(0,1fr)) 20px;gap:6px}
 .p{position:relative;aspect-ratio:1/1.05;background:var(--card);border:1.5px solid transparent;border-radius:16px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:0;cursor:pointer;padding:4px}
 .p.hl{border-color:var(--br)}.p.c{cursor:default;color:var(--mut)}
-.dy{position:absolute;left:9px;top:7px;font-size:11px;color:var(--mut)}.nb{position:absolute;right:9px;bottom:6px;font-size:10px;color:var(--mut)}
+.dy{position:absolute;left:9px;top:7px;font-size:11px;color:var(--mut)}.nb{position:absolute;right:9px;bottom:5px;font-size:16px;font-weight:700;color:var(--ink);opacity:.5}
 .gt{font-size:30px;line-height:1.1;font-weight:600}.ge{font-size:11px;color:var(--mut)}.st{font-size:12px;margin-top:5px;color:var(--mut)}
 .dt{position:absolute;right:8px;top:9px;display:flex;gap:3px}.dot{width:6px;height:6px;border-radius:50%;background:var(--acc)}.dot.ok{background:var(--ok)}.dot.gd{background:var(--gd)}
 .lg{display:flex;gap:12px;justify-content:center;color:var(--mut);font-size:11.5px;margin:10px 0 6px}.lg i{display:inline-block;width:6px;height:6px;border-radius:50%;margin-right:4px;background:var(--acc)}.lg i.ok{background:var(--ok)}.lg i.gd{background:var(--gd)}
@@ -74,7 +75,7 @@ header{background:linear-gradient(135deg,color-mix(in srgb,var(--br) 14%,transpa
 .topics{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin:8px 0 12px}.topics button{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:12px;font:inherit;color:var(--ink);cursor:pointer;transition:transform .15s,background .2s}.topics button:active{transform:scale(.96)}.topics button.on{background:linear-gradient(135deg,var(--br),var(--br2));color:#fff;border-color:transparent}
 .rd{margin-bottom:12px;max-width:100%}.rd:empty{display:none}.cp{display:flex;flex-direction:column;gap:8px;margin:8px 0 16px}.cp textarea{width:100%;resize:vertical;background:var(--card);border:1px solid var(--line);border-radius:14px;padding:10px 12px;font:inherit;color:var(--ink)}
 </style></head><body><div class="app">
-<header><svg class="logo" viewBox="0 0 32 32"><circle cx="16" cy="16" r="15" class="a"/><path class="b" d="M16 1a15 15 0 0 1 0 30a7.5 7.5 0 0 1 0-15a7.5 7.5 0 0 0 0-15z"/><circle cx="16" cy="8.5" r="2.4" class="a"/><circle cx="16" cy="23.5" r="2.4" class="b"/></svg><h1>Qimen</h1><span>奇门遁甲 · Joey Yap school</span></header>
+<header><h1>QMDJ</h1><span>奇门遁甲</span></header>
 <section class="view on" id="v-chart">
 <div class="bar"><input type="datetime-local" id="dt"><button class="btn g" id="now"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg>Now</button><button class="btn" id="go"><svg viewBox="0 0 24 24"><path d="M12 3l1.9 5.4L19.5 10l-5.6 1.7L12 17.5l-1.9-5.8L4.5 10l5.6-1.6z"/><path d="M19 17v4M17 19h4"/></svg>Cast</button></div>
 <div class="hdr" id="hdr"></div>
@@ -143,19 +144,19 @@ function render(){
  const stc=(c,l)=>`<div class="hs"><div class="l">${l}</div><div class="sz">${c}</div><div class="s">${PYS[c]} · ${STE[c]}</div></div>`;
  $("hdr").innerHTML=`<div><div class="l">Hour chart</div><div class="tt">${tm}</div></div><div style="display:flex">${stc(hs,"Hour stem")}${stc(ds,"Day stem")}</div>`;
  const dayP=hp(ds),hourP=hp(hs==="甲"?i.xunshou.slice(-1):hs);
- const IDX={4:0,9:1,2:2,3:3,5:4,7:5,8:6,1:7,6:8};
+ const IDX={4:0,9:1,2:2,3:3,5:4,7:5,8:6,1:7,6:8},ju=r.raw.juShu.number,FN=p=>((p+ju-6)%9+9)%9+1;
  const T=p=>{const o=P[p],n=IDX[p];
-  if(p==5){const e=sp2(o.di);return`<div class="p c" style="--i:${n}"><div class="r1" style="grid-template-columns:1fr">${cell(e.m,PYS[e.m],"")}</div><div class="c"><span class="s">Center 5</span></div></div>`}
+  if(p==5){const e=sp2(o.di);return`<div class="p c" style="--i:${n}"><div class="r1" style="grid-template-columns:1fr">${cell(e.m,PYS[e.m],"")}</div><div class="c"><span class="s">Center</span></div></div>`}
   const th=sp2(o.tian),ea=sp2(o.di),sk=o.star.slice(-1),dk=DK[o.deity]||o.deity.slice(-1);
   const bd=(p==dayP?'<i class="bd">Day</i>':"")+(p==hourP?'<i class="bd">Hour</i>':"")+(hs==="甲"&&p==hourP?'<i class="bd">甲</i>':"");
   const hl=shiP&&shiP.p==p?" hl":"",dots=o.tags.map(t=>`<i class="dot ${tc(t)}"></i>`).join("");
-  return`<button class="p${hl}" data-p="${p}" style="--i:${n}"><div class="r1">${cell(th.m,PYS[th.m],th.l,bd)}${cell(sk,PYT[sk]||"",o.star==="禽芮"?"禽":"")}${cell(dk,EN[o.deity]||"","")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m,PYS[ea.m],ea.l)}${cell(o.gate[0],EN[o.gate]||"","",hl?'<i class="bd">Zhi Shi</i>':"")}<span class="nb">${p}</span></div></button>`};
+  return`<button class="p${hl}" data-p="${p}" style="--i:${n}"><div class="r1">${cell(th.m,PYS[th.m],th.l,bd)}${cell(sk,PYT[sk]||"",o.star==="禽芮"?"禽":"")}${cell(dk,EN[o.deity]||"","")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m,PYS[ea.m],ea.l)}${cell(o.gate[0],EN[o.gate]||"","",hl?'<i class="bd">Zhi Shi</i>':"")}<span class="nb">${FN(p)}</span></div></button>`};
  const L=(p,v)=>`<div class="lb2${v?" v":""}">${PAL[p][1]} ${PAL[p][0]} ${p} ${PE[p]}</div>`,e="<div></div>";
  $("grid").innerHTML=[e,L(4),L(9),L(2),e, e,T(4),T(9),T(2),e, L(3,1),T(3),T(5),T(7),L(7,1), e,T(8),T(1),T(6),e, e,L(8),L(1),L(6),e].join("")}
 function sheet(p){
  const o=P[p],[zh,dir]=PAL[p],rw=(a,b)=>`<div class="rw"><span>${a}</span><span>${b}</span></div>`;
  $("sh-t").textContent=`Palace ${p} · ${zh} · ${dir} · ${PE[p]}`;
- $("sh-b").innerHTML=rw("Deity 神",`${o.deity} ${EN[o.deity]||""}`)+rw("Star 星",`${o.star} ${EN[o.star]||""}`)+rw("Door 门",`${o.gate} ${EN[o.gate]||""}`)+rw("Heaven stem 天盘",o.tian)+rw("Earth stem 地盘",o.di)+(o.an?rw("Hidden stem 暗干",o.an):"")+(o.tags.length?`<div class="tg">${o.tags.map(t=>`<div>• ${t}</div>`).join("")}</div>`:"");
+ $("sh-b").innerHTML=rw("Deity 神",`${o.deity} ${EN[o.deity]||""}`)+rw("Star 星",`${o.star} ${EN[o.star]||""}`)+rw("Door 门",`${o.gate} ${EN[o.gate]||""}`)+rw("Heaven stem 天盘",o.tian)+rw("Earth stem 地盘",o.di)+rw("Ju number",((p+chart.raw.juShu.number-6)%9+9)%9+1)+(o.an?rw("Hidden stem 暗干",o.an):"")+(o.tags.length?`<div class="tg">${o.tags.map(t=>`<div>• ${t}</div>`).join("")}</div>`:"");
  $("sheet").hidden=false}
 function tab(n){document.querySelectorAll(".view").forEach(v=>v.classList.toggle("on",v.id=="v-"+n));document.querySelectorAll(".tb").forEach(b=>b.classList.toggle("on",b.dataset.t==n))}
 const VC={Favorable:"var(--ok)",Mixed:"var(--gold)",Unfavorable:"var(--acc)",Wait:"var(--mut)"};
