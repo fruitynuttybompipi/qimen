@@ -1726,6 +1726,52 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // DT/SX/DX: plain-English meanings of doors, stars and deities.
       // DS/SS/DD: rating tables. These are classical defaults chosen for this app; adjust to your school.
       // ══════════════════════════════════════════════════════════
+      // Months of the year that belong to each direction; a void palace tends to open around then.
+      const MON = {
+        N: "Dec",
+        NE: "Jan-Feb",
+        E: "Mar",
+        SE: "Apr-May",
+        S: "Jun",
+        SW: "Jul-Aug",
+        W: "Sep",
+        NW: "Oct-Nov",
+      };
+      // Workplace feel suggested by the star in a palace (used for Work and Career).
+      const ENV = {
+        柱: "noisy",
+        心: "rule-bound",
+        蓬: "creative",
+        任: "profit-driven",
+        冲: "chaotic",
+        辅: "academic",
+        英: "cheerful",
+        芮: "large and busy",
+        禽芮: "large and busy",
+      };
+      // Where the Open door sits, read against its home palace (north-west, metal).
+      const OPENPOS = {
+        SW: "In the south-west it is fed by the earth, the best place for it.",
+        W: "In the west it shares its own element, which is good.",
+        NW: "Back in its home palace (Fu Yin) means no real change: a promotion in name only.",
+        N: "In the north it can produce results, which is good for a career.",
+        NE: "In the north-east it is entering the graveyard: even a gain can feel stagnant.",
+        E: "In the east it presses on the palace: a hard road, though the money is there.",
+        SE: "In the south-east it is reversed (Fan Yin): you may get something different from what you applied for.",
+        S: "In the south the fire presses on it: other people may control you in the new role.",
+      };
+      // Roles that are stars or deities rather than doors.
+      const LEAD = {
+        boss: "The Chief, who stands for your boss or superior, sits here",
+        illness: "The Rui (Grain) star, which stands for the illness, sits here",
+        treatment: "The Xin (Heart) star, which stands for medical treatment, sits here",
+      };
+      // The year stem of a birth year: used when someone else is the asker.
+      function yearStem(y) {
+        const s = "庚辛壬癸甲乙丙丁戊己"[y % 10];
+        return s === "甲" ? "戊己庚辛壬癸"[((Math.floor((y - 1924) / 10) % 6) + 6) % 6] : s;
+      }
+      let ASKY = 0;
       const DT = {
         开: "new starts, openings and authority",
         休: "calm, support and good relationships",
@@ -1763,13 +1809,15 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         SS = { 辅: 2, 心: 2, 任: 2, 冲: 0, 英: 0, 芮: 0, 禽芮: 1, 蓬: -1, 柱: -1 },
         DD = { 符: 2, 合: 2, 天: 2, 地: 2, 阴: 1, 蛇: -2, 玄: -2, 陈: -2, 雀: -1, 虎: -2 },
         // Heaven-plate stems (the people realm): Geng is the enemy of Jia; Yi, Bing, Ding, Wu help.
-        ST = { 甲: 1, 乙: 1, 丙: 1, 丁: 1, 戊: 1, 己: -1, 庚: -2, 辛: -1, 壬: -1, 癸: 0 };
+        ST = { 甲: 1, 乙: 1, 丙: 1, 丁: 1, 戊: 1, 己: -1, 庚: -2, 辛: -1, 壬: -1, 癸: -1 };
       // Topics. door = main door read; extra = further doors; selfW = weight of your own palace;
       // soft = gentle wording (wellbeing).
       const TOP = {
         work: {
           label: "Work",
           door: "开",
+          boss: 1,
+          env: 1,
           extra: [
             ["生", "progress"],
             ["景", "feedback"],
@@ -1789,6 +1837,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         career: {
           label: "Career",
           door: "开",
+          boss: 1,
+          env: 1,
           noun: "your career move",
           area: "career, opportunity and authority",
         },
@@ -1814,6 +1864,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         health: {
           label: "Health",
           door: "生",
+          med: 1,
           noun: "this health matter",
           area: "vitality and recovery",
         },
@@ -1847,7 +1898,11 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function flags(p) {
         const T = P[p].tags.join("|"),
           f = [];
-        if (/void/.test(T)) f.push("marked void, so the result may be reduced");
+        if (/void/.test(T))
+          f.push(
+            "marked void: not ready or not available yet, possibly opening around " +
+              MON[PAL[p][1]],
+          );
         if (/Palace compel/.test(T)) f.push("under strong pressure from its palace");
         else if (/Door compel/.test(T)) f.push("under some pressure from its palace");
         if (/Fan Yin/.test(T)) f.push("reversed (a very negative sign)");
@@ -1920,7 +1975,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           i = chart.info,
           z = i.siZhu,
           hs = z.time[0],
-          ds = z.day[0];
+          ds = ASKY ? yearStem(ASKY) : z.day[0];
         const matterP = hp(hs === "甲" ? i.xunshou.slice(-1) : hs),
           selfP = hp(ds),
           doorP = +Object.keys(P).find((p) => p != 5 && P[p].gate[0] === T.door);
@@ -1937,6 +1992,19 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             ]),
           )
           .concat(T.stem ? [[hp(T.stem[0]), T.stem[1], 1.5]] : [])
+          .concat(
+            T.boss
+              ? [[+Object.keys(P).find((p) => p != 5 && DK[P[p].deity] === "符"), "boss", 1.5]]
+              : [],
+          )
+          .concat(
+            T.med
+              ? [
+                  [+Object.keys(P).find((p) => p != 5 && /芮/.test(skey(P[p]))), "illness", 1],
+                  [+Object.keys(P).find((p) => p != 5 && skey(P[p]) === "心"), "treatment", 1],
+                ]
+              : [],
+          )
           .filter((x) => x[0] && x[0] != 5);
         let sum = 0,
           w = 0;
@@ -1944,21 +2012,31 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           sum += score(p) * wt;
           w += wt;
         });
-        // Asker (day stem) against outcome (hour stem): does the outcome feed or press you?
+        // Asker (day stem) against outcome (hour stem). The outcome box decides what you can get.
         let relTxt = "";
-        if (!T.soft && matterP && selfP && matterP != selfP && matterP != 5 && selfP != 5) {
+        if (!T.soft && matterP && selfP && matterP != 5 && selfP != 5) {
           const a = PE[selfP],
             b = PE[matterP];
-          const R =
-            GEN[b] === a
-              ? [4, "The outcome feeds you, a positive sign."]
-              : BEATS[b] === a
-                ? [-4, "The outcome presses on you, a negative sign."]
-                : GEN[a] === b
-                  ? [2, "You feed the outcome: it can work, but it will take effort."]
-                  : BEATS[a] === b
-                    ? [-2, "You press on the outcome: it is hard to obtain."]
-                    : null;
+          let R = null;
+          if (matterP === selfP)
+            R = [
+              3,
+              "You and the outcome share a palace: you may already have what you are asking for.",
+            ];
+          else if (a === b)
+            R = [3, "Asker and outcome share an element: the result is within reach."];
+          else if (GEN[b] === a) R = [4, "The outcome feeds you: you can get it."];
+          else if (BEATS[b] === a) R = [-4, "The outcome presses on you: you cannot get it."];
+          else if (GEN[a] === b)
+            R = [
+              -1,
+              "You feed the outcome: very hard, and it will cost you a lot of effort. Worth it only if the outcome palace looks good.",
+            ];
+          else if (BEATS[a] === b)
+            R = [
+              score(selfP) > score(matterP) ? 1 : -1,
+              "You press on the outcome: you can get it, but only by giving something up. That is more likely when your own palace is stronger than the outcome palace.",
+            ];
           if (R) {
             sum += R[0] * 1.5;
             w += 1.5;
@@ -1976,7 +2054,25 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           Unfavorable: `Conditions are against ${T.noun} right now.`,
         }[v];
         const tg = P[doorP].gate[0];
-        const sumTxt = `The ${EN[P[doorP].gate]} door, which governs ${T.area}, sits in palace ${doorP} with ${qual(score(doorP))} support.`;
+        let sumTxt = `The ${EN[P[doorP].gate]} door, which governs ${T.area}, sits in palace ${doorP} with ${qual(score(doorP))} support.`;
+        if (T.door === "开") sumTxt += " " + OPENPOS[PAL[doorP][1]];
+        if (T.env) {
+          const nw = ENV[skey(P[doorP])],
+            cu = P[6] && ENV[skey(P[6])];
+          if (nw)
+            sumTxt +=
+              ` The new setting feels ${nw}` + (cu ? `; your current one feels ${cu}.` : ".");
+        }
+        if (ASKY) sumTxt += ` Read for someone born in ${ASKY} (stem ${yearStem(ASKY)}).`;
+        if (T.med) {
+          const sp = selfP && P[selfP],
+            ill = keys.find((x) => x[1] === "illness");
+          if (sp && (DK[sp.deity] === "符" || sp.gate[0] === "生"))
+            sumTxt += " The Chief or the Life door is with the asker, so life is not at risk.";
+          if (ill && /^(E|SE)$/.test(PAL[ill[0]][1]))
+            sumTxt +=
+              " The illness star sits in the east or south-east, which points to a condition that can be cured.";
+        }
         const why = [],
           seen = new Set();
         keys.forEach(([p, role]) => {
@@ -1990,7 +2086,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           const o = P[p],
             g = o.gate[0];
           const lead =
-            role === "topic"
+            LEAD[role] ||
+            (role === "topic"
               ? `The ${EN[o.gate]} door lands here`
               : role === "matter"
                 ? "The matter itself sits here"
@@ -1998,7 +2095,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
                   ? "Wu, the stem for your capital, sits here"
                   : role === "you"
                     ? "You (the day stem) sit here"
-                    : `The ${EN[o.gate]} door, which shows ${role}, lands here`;
+                    : `The ${EN[o.gate]} door, which shows ${role}, lands here`);
           why.push({
             palace: p,
             point: `${lead}, bringing ${DT[g]}. The star adds ${SX[skey(o)]}, and the deity adds ${DX[DK[o.deity]]}. Overall ${qual(score(p))}${flags(p)}.${role === "matter" ? relTxt : ""}`,
@@ -2027,6 +2124,15 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           ],
         }[v].slice();
         act.push(`Most supportive direction: ${PAL[best][1]} (palace ${best}: ${nm(best)}).`);
+        if (v !== "Favorable" && selfP && selfP != 5) {
+          const hl = all
+            .filter((p) => GEN[PE[p]] === PE[selfP])
+            .sort((x, y) => score(y) - score(x))[0];
+          if (hl)
+            act.push(
+              `To strengthen yourself, work from the ${DN[PAL[hl][1]]} (palace ${hl}): it feeds your own palace, and its ${EN[P[hl].gate]} door points to ${DT[P[hl].gate[0]]}.`,
+            );
+        }
         const kp = keys.map((x) => x[0]),
           tgs = kp.map((p) => P[p].tags.join("|")).join("|");
         const timing = /horse/.test(tgs)
@@ -2097,7 +2203,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // Copies the chart and your question to the clipboard.
       function copyPrompt() {
         const q = $("q").value.trim() || "(write your question here)";
-        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
+        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet and opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
         const done = () => {
           const b = $("copy");
           b.textContent = "Copied. Paste it into Claude.";
@@ -2197,7 +2303,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             : s >= 0
               ? "This palace is neutral: it can go either way."
               : "This palace is hurting: expect resistance or delays here.";
-        return `<div class="ex"><p><b>${v}</b></p><p><span>${o.gate} ${EN[o.gate]}</span> door brings ${DT[g]}.</p><p><span>${o.star}</span> adds ${SX[sk]}.</p><p><span>${o.deity} ${EN[o.deity]}</span> brings ${DX[dk]}.</p>${fl ? `<p>Also, this palace is ${fl.slice(2)}.</p>` : ""}${ELM(p)}</div>`;
+        return `<div class="ex"><p><b>${v}</b></p><p><span>${o.gate} ${EN[o.gate]}</span> door brings ${DT[g]}.</p><p><span>${o.star}</span> adds ${SX[sk]}.</p><p><span>${o.deity} ${EN[o.deity]}</span> brings ${DX[dk]}.</p>${fl ? `<p>Also, this palace is ${fl.slice(2)}.</p>` : ""}<p>Time of year: ${MON[PAL[p][1]]}.</p>${ELM(p)}</div>`;
       }
       // Jumps to the Chart tab and briefly highlights palace p.
       function flash(p) {
@@ -2222,7 +2328,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function openSettings() {
         openSheet(
           "set",
-          `<h3>Settings</h3><div class="lbl">Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><button class="btn g wide" id="s-guide">How to read this</button><button class="btn g wide" id="s-gl">Glossary</button><button class="btn g wide" id="s-rh">Reset learning hints</button>`,
+          `<h3>Settings</h3><div class="lbl">Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><div class="lbl">Someone else is asking</div><input type="number" id="s-yr" min="1900" max="2100" placeholder="Their birth year (optional)" value="${ASKY || ""}" /><p class="hint">If you cast for another person, enter their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">How to read this</button><button class="btn g wide" id="s-gl">Glossary</button><button class="btn g wide" id="s-rh">Reset learning hints</button>`,
         );
         document.querySelectorAll("#set-b [data-m]").forEach(
           (b) =>
@@ -2235,6 +2341,10 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               openSettings();
             }),
         );
+        $("s-yr").onchange = () => {
+          const y = +$("s-yr").value;
+          ASKY = y >= 1900 && y <= 2100 ? y : 0;
+        };
         $("s-guide").onclick = () => {
           $("set").hidden = true;
           openGuide();
@@ -2263,7 +2373,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           "gd",
           `<h3>How to read this</h3>
 <div class="stp"><b>1. What it is</b><p>Qimen Dunjia reads a chart cast for one moment. The chart describes the situation at the time you ask.</p></div>
-<div class="stp"><b>2. How to use it</b><p>Press <i>Now</i> and <i>Cast</i> when you actually have the question. Pick a topic, then read the answer. Recasting to hunt for a nicer result defeats the method.</p></div>
+<div class="stp"><b>2. How to use it</b><p>Ask your question first, then cast. Press <i>Now</i> and <i>Cast</i> when you actually have the question; a sign from your day, such as news about the matter, is a good cue. Pick a topic, then read the answer. Trust the first chart: asking again at another time to get a nicer result defeats the method.</p></div>
 <div class="stp"><b>3. Reading a palace</b><p>The 8 outer palaces are directions. Top row of a tile: heaven stem (people), star (conditions), deity (unseen forces). Bottom row: earth stem and the door (action). The big corner number is the Ju number.</p><p>Dots: red is caution, green is void or horse, gold is feeding. Badges: Day and Hour mark your day and hour stems, and Zhi Shi marks the lead door.</p></div>
 <div class="stp"><b>4. Tap to learn</b><p>Tap any palace for its meaning. Tap a reason in a reading to jump to its palace.</p></div>
 <button class="btn wide" id="g-ok">Got it</button><button class="btn g wide" id="g-gl">Open glossary</button>`,
