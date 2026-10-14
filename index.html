@@ -604,6 +604,28 @@
         align-items: center;
         line-height: 1.1;
       }
+      .z.qg {
+        color: var(--qg);
+        font-weight: 700;
+      }
+      .z.qd {
+        color: var(--qd);
+        font-weight: 400;
+      }
+      :root {
+        --qg: #2260d6;
+        --qd: #858b9e;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) {
+          --qg: #7db4ff;
+          --qd: #8f96aa;
+        }
+      }
+      :root[data-theme="dark"] {
+        --qg: #7db4ff;
+        --qd: #8f96aa;
+      }
       .z {
         font-size: 22px;
         font-weight: 600;
@@ -1531,8 +1553,11 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         return c.length > 1 ? { m: c[c.length - 1], l: c[0] } : { m: c[0] || "", l: "" };
       };
       // One tile cell: big character, small label, optional small stem and badges.
+      const QG = "开休生景心英辅任乙丙丁戊符阴合地天",
+        QD = "死伤惊杜芮蓬柱冲己庚辛壬癸蛇虎玄陈雀",
+        qc = (z) => (QG.includes(z) ? " qg" : QD.includes(z) ? " qd" : "");
       const cell = (z, s, u, x) =>
-        `<div class="c"><span class="z">${z}${u ? `<sup>${u}</sup>` : ""}</span><span class="s">${s}</span>${x || ""}</div>`;
+        `<div class="c"><span class="z${qc(z)}">${z}${u ? `<sup>${u}</sup>` : ""}</span><span class="s">${s}</span>${x || ""}</div>`;
       // Palace holding a stem on the heaven plate (0 if none).
       const hp = (st) => {
         for (const p of [1, 2, 3, 4, 6, 7, 8, 9]) if (sp2(P[p].tian).m === st) return p;
@@ -1575,10 +1600,10 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           const bd =
             (p == dayP ? '<i class="bd">Day</i>' : "") +
             (p == hourP ? '<i class="bd">Hour</i>' : "") +
-            (hs === "甲" && p == hourP ? '<i class="bd">甲</i>' : "");
+            (fuP && fuP.p == p ? '<i class="bd">甲</i>' : "");
           const hl = shiP && shiP.p == p ? " hl" : "",
             dots = o.tags.map((t) => `<i class="dot ${tc(t)}"></i>`).join("");
-          return `<button class="p${hl}" data-p="${p}" style="--i:${n}"><div class="r1">${cell(th.m, PYS[th.m], th.l, bd)}${cell(sk, PYT[sk] || "", o.star === "禽芮" ? "禽" : "")}${cell(dk, EN[o.deity] || "", "")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m, PYS[ea.m], ea.l)}${cell(o.gate[0], EN[o.gate] || "", "", hl ? '<i class="bd">Zhi Shi</i>' : "")}<span class="nb">${FN(p)}</span></div></button>`;
+          return `<button class="p${hl}" data-p="${p}" style="--i:${n}"><div class="r1">${cell(th.m, PYS[th.m], th.l, bd)}${cell(sk, PYT[sk] || "", o.star === "禽芮" ? "禽" : "")}${cell(dk, EN[o.deity] || "", "")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m, PYS[ea.m], ea.l)}${cell(o.gate[0], EN[o.gate] || "", "", hl ? '<i class="bd">Envoy</i>' : "")}<span class="nb">${FN(p)}</span></div></button>`;
         };
         const L = (p, v) =>
             `<div class="lb2${v ? " v" : ""}">${PAL[p][1]} ${PAL[p][0]} ${p} ${PE[p]}</div>`,
@@ -1805,8 +1830,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         陈: "delay and getting stuck",
         雀: "gossip, paperwork and disputes",
       };
-      const DS = { 开: 3, 休: 3, 生: 3, 景: 1, 杜: 0, 伤: -2, 死: -3, 惊: -2 },
-        SS = { 辅: 2, 心: 2, 任: 2, 冲: 0, 英: 0, 芮: 0, 禽芮: 1, 蓬: -1, 柱: -1 },
+      const DS = { 开: 3, 休: 3, 生: 3, 景: 1, 杜: -1, 伤: -2, 死: -3, 惊: -2 },
+        SS = { 辅: 2, 心: 2, 任: 2, 英: 1, 冲: -1, 芮: -1, 禽芮: -1, 蓬: -1, 柱: -1 },
         DD = { 符: 2, 合: 2, 天: 2, 地: 2, 阴: 1, 蛇: -2, 玄: -2, 陈: -2, 雀: -1, 虎: -2 },
         // Heaven-plate stems (the people realm): Geng is the enemy of Jia; Yi, Bing, Ding, Wu help.
         ST = { 甲: 1, 乙: 1, 丙: 1, 丁: 1, 戊: 1, 己: -1, 庚: -2, 辛: -1, 壬: -1, 癸: -1 };
@@ -2383,7 +2408,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           `<h3>How to read this</h3>
 <div class="stp"><b>1. What it is</b><p>Qimen Dunjia reads a chart cast for one moment. The chart describes the situation at the time you ask.</p></div>
 <div class="stp"><b>2. How to use it</b><p>Ask your question first, then cast. Press <i>Now</i> and <i>Cast</i> when you actually have the question; a sign from your day, such as news about the matter, is a good cue. Pick a topic, then read the answer. Trust the first chart: asking again at another time to get a nicer result defeats the method.</p></div>
-<div class="stp"><b>3. Reading a palace</b><p>The 8 outer palaces are directions. Top row of a tile: heaven stem (people), star (conditions), deity (unseen forces). Bottom row: earth stem and the door (action). The big corner number is the Ju number.</p><p>Dots: red is caution, green is void or horse, gold is feeding. Badges: Day and Hour mark your day and hour stems, and Zhi Shi marks the lead door.</p></div>
+<div class="stp"><b>3. Reading a palace</b><p>The 8 outer palaces are directions. Top row of a tile: heaven stem (people), star (conditions), deity (unseen forces). Bottom row: earth stem and the door (action). The big corner number is the Ju number.</p><p>Bold blue characters are the supportive ones and lighter grey characters are the difficult ones.</p><p>Dots: red is caution, green is void or horse, gold is feeding. Badges: Day and Hour mark your day and hour stems, 甲 marks the hidden leader (the Chief palace), and Envoy marks the lead door.</p></div>
 <div class="stp"><b>4. Tap to learn</b><p>Tap any palace for its meaning. Tap a reason in a reading to jump to its palace.</p></div>
 <button class="btn wide" id="g-ok">Got it</button><button class="btn g wide" id="g-gl">Open glossary</button>`,
         );
