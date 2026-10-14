@@ -541,6 +541,20 @@
         }
       }
       /* ══ 3. CHART HEADER AND BOARD: 3x3 palace layout ══ */
+      .fyb {
+        background: color-mix(in srgb, var(--acc) 12%, var(--card));
+        border: 1.5px solid var(--acc);
+        border-radius: 16px;
+        padding: 12px 16px;
+        margin-bottom: 12px;
+        font-size: 13.5px;
+        line-height: 1.45;
+      }
+      .fyb b {
+        display: block;
+        font-size: 15px;
+        margin-bottom: 3px;
+      }
       .hdr {
         display: flex;
         justify-content: space-between;
@@ -1301,6 +1315,7 @@
             >Cast
           </button>
         </div>
+        <div class="fyb" id="fyban" hidden></div>
         <div class="hdr" id="hdr"></div>
         <div id="topq"></div>
         <div id="hint"></div>
@@ -1574,6 +1589,20 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         for (const p of [1, 2, 3, 4, 6, 7, 8, 9]) if (sp2(P[p].tian).l === st) return p;
         return 0;
       };
+      // A full Fu Yin chart: every stem, star and door is back in its home palace, so nothing moves.
+      function fuYinChart(P) {
+        return [1, 2, 3, 4, 6, 7, 8, 9].every((p) => {
+          const o = P[p];
+          const t = (o && o.tags.join("|")) || "";
+          return (
+            o &&
+            sp2(o.tian).m &&
+            sp2(o.tian).m === sp2(o.di).m &&
+            /Star Fu Yin/.test(t) &&
+            (!o.gate || /Door Fu Yin/.test(t))
+          );
+        });
+      }
       // Draws the header and 3x3 board for the current chart, then refreshes hints,
       // direction cards and the better-time finder.
       function render() {
@@ -1591,6 +1620,12 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           `<div class="hs"><div class="l">${l}</div><div class="sz">${c}</div><div class="s">${PYS[c]} · ${STE[c]}</div></div>`;
         $("hdr").innerHTML =
           `<div><div class="l">Hour chart</div><div class="tt">${tm}</div></div><div style="display:flex">${stc(hs, "Hour stem")}${stc(ds, ASKY ? "Asker " + ASKY : "Day stem")}</div>`;
+        const fyb = $("fyban");
+        if (fuYinChart(P)) {
+          fyb.innerHTML =
+            "<b>Fu Yin chart: do not read this one</b>Every heaven stem sits on the same earth stem, so nothing moves in this hour. A Fu Yin chart cannot be used for a reading. Wait for the next hour and cast again, or ask your question at another time.";
+          fyb.hidden = false;
+        } else fyb.hidden = true;
         const dayP = hp(ds),
           hourP = hp(hs === "甲" ? i.xunshou.slice(-1) : hs);
         const IDX = { 4: 0, 9: 1, 2: 2, 3: 3, 5: 4, 7: 5, 8: 6, 1: 7, 6: 8 },
@@ -2085,13 +2120,16 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const avg = sum / w;
         const fy = keys.some(([p]) => /Fu Yin|Fan Yin/.test(P[p].tags.join()));
         let v = avg >= 3.5 ? "Favorable" : avg >= -0.5 ? "Mixed" : "Unfavorable";
-        if (fy && v !== "Unfavorable") v = "Wait";
-        const head = {
-          Favorable: `Conditions look supportive for ${T.noun}.`,
-          Mixed: `Mixed signals for ${T.noun}; progress is possible with care.`,
-          Wait: `Things look stuck for ${T.noun}; hold off for now.`,
-          Unfavorable: `Conditions are against ${T.noun} right now.`,
-        }[v];
+        const FYC = fuYinChart(P);
+        if ((fy && v !== "Unfavorable") || FYC) v = "Wait";
+        const head = FYC
+          ? "This is a Fu Yin chart, so it cannot be read."
+          : {
+              Favorable: `Conditions look supportive for ${T.noun}.`,
+              Mixed: `Mixed signals for ${T.noun}; progress is possible with care.`,
+              Wait: `Things look stuck for ${T.noun}; hold off for now.`,
+              Unfavorable: `Conditions are against ${T.noun} right now.`,
+            }[v];
         const tg = P[doorP].gate[0];
         let sumTxt = `The ${EN[P[doorP].gate]} door, which governs ${T.area}, sits in palace ${doorP} with ${qual(score(doorP))} support.`;
         if (T.door === "开") sumTxt += " " + OPENPOS[PAL[doorP][1]];
@@ -2198,6 +2236,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             )
             .join("\n") +
           `\nWeighted score ${avg.toFixed(1)}. Rules: door, star, deity and stem ratings from the course notes, reduced by Door and Palace compel, adjusted for Fu Yin, Fan Yin, punishment and void.`;
+        if (FYC)
+          sumTxt =
+            "Every heaven stem is back on its own earth stem, so nothing moves in this hour. Wait for the next hour and cast again. The notes below are only for study.";
         const R = {
           verdict: v,
           headline: head,
@@ -2733,7 +2774,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           const pr = /compel/.test(P[mp].tags.join()) ? ", though it is under pressure" : "";
           mt = "; the palace for your matter (palace " + mp + ") looks " + qual(score(mp)) + pr;
         }
-        $("oneline").textContent = ov + mt + ".";
+        $("oneline").textContent = fuYinChart(P)
+          ? "This chart is Fu Yin and cannot be read. The notes on the tiles are for study only."
+          : ov + mt + ".";
         showForms();
         const dr = (c, l, p) =>
           `<button class="dr${c}" data-f="${p}"><span>${COMPI}${l}</span><b>${DN[PAL[p][1]]}</b><em>palace ${p} · ${nm(p)}</em></button>`;
