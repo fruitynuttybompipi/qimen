@@ -1046,6 +1046,16 @@
         align-items: center;
         gap: 8px;
       }
+      #s-yr {
+        width: 100%;
+        margin-top: 8px;
+        background: var(--bg);
+        border: 1px solid var(--line);
+        border-radius: 10px;
+        padding: 10px;
+        font: inherit;
+        color: var(--ink);
+      }
       .bth select {
         background: var(--bg);
         border: 1px solid var(--line);
@@ -1571,7 +1581,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           i = r.info,
           z = i.siZhu,
           hs = z.time[0],
-          ds = z.day[0];
+          ds = ASKY ? yearStem(ASKY) : z.day[0];
         const fuP = Object.values(P).find((o) => o.deity === "值符"),
           shiName = i.shi.replace("值使：", ""),
           shiP = Object.values(P).find((o) => o.gate === shiName);
@@ -1580,7 +1590,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const stc = (c, l) =>
           `<div class="hs"><div class="l">${l}</div><div class="sz">${c}</div><div class="s">${PYS[c]} · ${STE[c]}</div></div>`;
         $("hdr").innerHTML =
-          `<div><div class="l">Hour chart</div><div class="tt">${tm}</div></div><div style="display:flex">${stc(hs, "Hour stem")}${stc(ds, "Day stem")}</div>`;
+          `<div><div class="l">Hour chart</div><div class="tt">${tm}</div></div><div style="display:flex">${stc(hs, "Hour stem")}${stc(ds, ASKY ? "Asker " + ASKY : "Day stem")}</div>`;
         const dayP = hp(ds),
           hourP = hp(hs === "甲" ? i.xunshou.slice(-1) : hs);
         const IDX = { 4: 0, 9: 1, 2: 2, 3: 3, 5: 4, 7: 5, 8: 6, 1: 7, 6: 8 },
@@ -1598,7 +1608,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             sk = o.star.slice(-1),
             dk = DK[o.deity] || o.deity.slice(-1);
           const bd =
-            (p == dayP ? '<i class="bd">Day</i>' : "") +
+            (p == dayP ? `<i class="bd">${ASKY ? "Asker" : "Day"}</i>` : "") +
             (p == hourP ? '<i class="bd">Hour</i>' : "") +
             (fuP && fuP.p == p ? '<i class="bd">甲</i>' : "");
           const hl = shiP && shiP.p == p ? " hl" : "",
@@ -1796,7 +1806,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const s = "庚辛壬癸甲乙丙丁戊己"[y % 10];
         return s === "甲" ? "戊己庚辛壬癸"[((Math.floor((y - 1924) / 10) % 6) + 6) % 6] : s;
       }
-      let ASKY = 0;
+      let ASKY = 0,
+        ASKSOME = false;
       const DT = {
         开: "new starts, openings and authority",
         休: "calm, support and good relationships",
@@ -2362,7 +2373,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function openSettings() {
         openSheet(
           "set",
-          `<h3>Settings</h3><div class="lbl">Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><div class="lbl">Someone else is asking</div><input type="number" id="s-yr" min="1900" max="2100" placeholder="Their birth year (optional)" value="${ASKY || ""}" /><p class="hint">If you cast for another person, enter their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">How to read this</button><button class="btn g wide" id="s-gl">Glossary</button><button class="btn g wide" id="s-rh">Reset learning hints</button>`,
+          `<h3>Settings</h3><div class="lbl">Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><div class="lbl">Who is asking?</div><div class="seg" id="s-who"><button data-w="me" class="${ASKY || ASKSOME ? "" : "on"}">Me</button><button data-w="some" class="${ASKY || ASKSOME ? "on" : ""}">Someone</button></div><div id="s-yrbox" ${ASKY || ASKSOME ? "" : "hidden"}><select id="s-yr"><option value="">Their birth year</option>${Array.from(
+            { length: new Date().getFullYear() - 1929 },
+            (_, k) => new Date().getFullYear() - k,
+          )
+            .map((y) => `<option value="${y}"${y === ASKY ? " selected" : ""}>${y}</option>`)
+            .join(
+              "",
+            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">How to read this</button><button class="btn g wide" id="s-gl">Glossary</button><button class="btn g wide" id="s-rh">Reset learning hints</button>`,
         );
         document.querySelectorAll("#set-b [data-m]").forEach(
           (b) =>
@@ -2375,10 +2393,27 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               openSettings();
             }),
         );
-        $("s-yr").onchange = () => {
-          const y = +$("s-yr").value;
-          ASKY = y >= 1900 && y <= 2100 ? y : 0;
+        const setAsker = (n) => {
+          if (n === ASKY) return;
+          ASKY = n;
+          if (chart) render();
         };
+        $("s-who")
+          .querySelectorAll("button")
+          .forEach((b) => {
+            b.onclick = () => {
+              ASKSOME = b.dataset.w === "some";
+              $("s-who")
+                .querySelectorAll("button")
+                .forEach((x) => x.classList.toggle("on", x === b));
+              $("s-yrbox").hidden = !ASKSOME;
+              if (!ASKSOME) {
+                $("s-yr").value = "";
+                setAsker(0);
+              } else setAsker(+$("s-yr").value || 0);
+            };
+          });
+        $("s-yr").onchange = () => setAsker(+$("s-yr").value || 0);
         $("s-guide").onclick = () => {
           $("set").hidden = true;
           openGuide();
