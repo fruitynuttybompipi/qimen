@@ -851,6 +851,75 @@
         color: var(--mut);
         margin-top: 10px;
       }
+      .lbl {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+      .lbl svg {
+        width: 14px;
+        height: 14px;
+      }
+      #set-b .seg button,
+      #set-b .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 7px;
+        transition:
+          background-color 0.3s,
+          color 0.3s,
+          box-shadow 0.3s;
+      }
+      #set-b .seg button svg {
+        width: 16px;
+        height: 16px;
+      }
+      #set-b .seg button.on svg {
+        animation: ipop 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.4);
+      }
+      #set-b .seg button[data-t="light"].on svg {
+        animation: ispin 0.7s ease;
+      }
+      @keyframes ipop {
+        0% {
+          transform: scale(0.4) rotate(-30deg);
+          opacity: 0;
+        }
+        100% {
+          transform: none;
+          opacity: 1;
+        }
+      }
+      @keyframes ispin {
+        from {
+          transform: rotate(-180deg) scale(0.5);
+        }
+        to {
+          transform: none;
+        }
+      }
+      .tt,
+      .tt *,
+      .tt *::before,
+      .tt *::after {
+        transition:
+          background-color 0.45s ease,
+          color 0.45s ease,
+          border-color 0.45s ease,
+          fill 0.45s ease,
+          stroke 0.45s ease,
+          box-shadow 0.45s ease !important;
+      }
+      @media (prefers-reduced-motion: reduce) {
+        #set-b .seg button svg {
+          animation: none !important;
+        }
+        .tt,
+        .tt * {
+          transition: none !important;
+        }
+      }
       .btn.wide {
         width: 100%;
         justify-content: center;
@@ -2355,6 +2424,46 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // BEGINNER MODE
       // MODE is 'beginner' or 'expert' and is remembered in localStorage.
       // ══════════════════════════════════════════════════════════
+      const ico = (p) => `<svg viewBox="0 0 24 24">${p}</svg>`;
+      const I = {
+        mode: ico(
+          '<path d="M4 7h10M18 7h2M4 17h2M10 17h10"/><circle cx="16" cy="7" r="2"/><circle cx="8" cy="17" r="2"/>',
+        ),
+        sprout: ico(
+          '<path d="M12 21v-8"/><path d="M12 13c0-4 3-6 7-6 0 4-3 6-7 6z"/><path d="M12 15c0-3-2-5-6-5 0 3 2 5 6 5z"/>',
+        ),
+        zap: ico('<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>'),
+        palette: ico(
+          '<path d="M12 3a9 9 0 1 0 0 18c1.4 0 2-1 1.5-2.2-.5-1.2.2-2.3 1.6-2.3H17a4 4 0 0 0 4-4 9 9 0 0 0-9-9.5z"/><circle cx="8" cy="11" r="1"/><circle cx="12" cy="7.5" r="1"/><circle cx="16" cy="11" r="1"/>',
+        ),
+        auto: ico('<rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/>'),
+        sun: ico(
+          '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+        ),
+        moon: ico('<path d="M20 14.5A8 8 0 0 1 9.5 4 8 8 0 1 0 20 14.5z"/>'),
+        user: ico('<circle cx="12" cy="8" r="4"/><path d="M4 21c0-4 4-6 8-6s8 2 8 6"/>'),
+        users: ico(
+          '<circle cx="9" cy="8" r="3.5"/><path d="M2 20c0-3.5 3-5.5 7-5.5s7 2 7 5.5"/><path d="M16 4.5a3.5 3.5 0 0 1 0 7M18 14.8c2.2.6 4 2.2 4 5.2"/>',
+        ),
+        book: ico('<path d="M4 5a2 2 0 0 1 2-2h13v16H6a2 2 0 0 0-2 2z"/><path d="M4 21V5M8 7h7"/>'),
+        list: ico('<path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/>'),
+        reset: ico('<path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/>'),
+      };
+      let THEME = "auto";
+      try {
+        THEME = localStorage.getItem("qm-theme") || "auto";
+      } catch (e) {}
+      // Auto follows the phone setting; light and dark force it.
+      const applyTheme = (anim) => {
+        const r = document.documentElement;
+        if (anim) {
+          r.classList.add("tt");
+          setTimeout(() => r.classList.remove("tt"), 500);
+        }
+        THEME === "auto" ? r.removeAttribute("data-theme") : r.setAttribute("data-theme", THEME);
+        r.style.colorScheme = THEME === "auto" ? "" : THEME;
+      };
+      applyTheme();
       let MODE = "beginner";
       try {
         MODE = localStorage.getItem("qm-mode") || "beginner";
@@ -2464,14 +2573,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function openSettings() {
         openSheet(
           "set",
-          `<h3>Settings</h3><div class="lbl">Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><div class="lbl">Who is asking?</div><div class="seg" id="s-who"><button data-w="me" class="${ASKY || ASKSOME ? "" : "on"}">Me</button><button data-w="some" class="${ASKY || ASKSOME ? "on" : ""}">Someone</button></div><div id="s-yrbox" ${ASKY || ASKSOME ? "" : "hidden"}><select id="s-yr"><option value="">Their birth year</option>${Array.from(
+          `<h3>Settings</h3><div class="lbl">${I.mode}Mode</div><div class="seg"><button data-m="beginner" class="${MODE === "beginner" ? "on" : ""}">${I.sprout}Beginner</button><button data-m="expert" class="${MODE === "expert" ? "on" : ""}">${I.zap}Expert</button></div><p class="hint">Beginner adds plain-English meanings, learning hints, step-by-step walkthroughs and the guide. Expert shows only the chart data.</p><div class="lbl">${I.palette}Appearance</div><div class="seg" id="s-th">${["auto", "light", "dark"].map((t) => `<button data-t="${t}" class="${THEME === t ? "on" : ""}">${I[t === "auto" ? "auto" : t === "light" ? "sun" : "moon"]}${t[0].toUpperCase() + t.slice(1)}</button>`).join("")}</div><div class="lbl">${I.user}Who is asking?</div><div class="seg" id="s-who"><button data-w="me" class="${ASKY || ASKSOME ? "" : "on"}">${I.user}Me</button><button data-w="some" class="${ASKY || ASKSOME ? "on" : ""}">${I.users}Someone</button></div><div id="s-yrbox" ${ASKY || ASKSOME ? "" : "hidden"}><select id="s-yr"><option value="">Their birth year</option>${Array.from(
             { length: new Date().getFullYear() - 1929 },
             (_, k) => new Date().getFullYear() - k,
           )
             .map((y) => `<option value="${y}"${y === ASKY ? " selected" : ""}>${y}</option>`)
             .join(
               "",
-            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">How to read this</button><button class="btn g wide" id="s-gl">Glossary</button><button class="btn g wide" id="s-rh">Reset learning hints</button>`,
+            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">${I.book}How to read this</button><button class="btn g wide" id="s-gl">${I.list}Glossary</button><button class="btn g wide" id="s-rh">${I.reset}Reset learning hints</button>`,
         );
         document.querySelectorAll("#set-b [data-m]").forEach(
           (b) =>
@@ -2484,6 +2593,21 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               openSettings();
             }),
         );
+        $("s-th")
+          .querySelectorAll("button")
+          .forEach(
+            (b) =>
+              (b.onclick = () => {
+                THEME = b.dataset.t;
+                try {
+                  localStorage.setItem("qm-theme", THEME);
+                } catch (e) {}
+                applyTheme(true);
+                $("s-th")
+                  .querySelectorAll("button")
+                  .forEach((x) => x.classList.toggle("on", x === b));
+              }),
+          );
         const setAsker = (n) => {
           if (n === ASKY) return;
           ASKY = n;
