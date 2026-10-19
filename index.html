@@ -1397,9 +1397,21 @@
       html,
       body {
         overflow: hidden;
-        position: fixed;
         width: 100%;
+        height: 100%;
+        background: var(--bg);
         touch-action: pan-x pan-y;
+      }
+      /* paint the status-bar strip when the page runs edge to edge */
+      body::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: env(safe-area-inset-top, 0px);
+        background: var(--bg);
+        z-index: 1;
       }
     </style>
   </head>
