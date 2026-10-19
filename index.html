@@ -142,13 +142,26 @@
       }
       .bar {
         display: flex;
+        flex-wrap: wrap;
         gap: 8px;
         align-items: center;
         margin-bottom: 12px;
       }
+      @media (max-width: 400px) {
+        .bar input {
+          flex-basis: 100%;
+        }
+        .bar .btn {
+          flex: 1;
+          justify-content: center;
+        }
+      }
       .bar input {
-        flex: 1;
+        flex: 1 1 190px;
         min-width: 0;
+        font-size: 14px;
+        padding-left: 8px;
+        padding-right: 8px;
         background: var(--card);
         border: 1px solid var(--line);
         border-radius: 12px;
@@ -419,13 +432,16 @@
         flex: none;
       }
       header {
-        background: linear-gradient(
-          135deg,
-          color-mix(in srgb, var(--br) 14%, transparent),
-          transparent 75%
-        );
         align-items: center;
         padding-bottom: 10px;
+      }
+      body {
+        background-image: linear-gradient(
+          180deg,
+          color-mix(in srgb, var(--br) 12%, transparent),
+          transparent 160px
+        );
+        background-repeat: no-repeat;
       }
       .btn {
         display: inline-flex;
@@ -674,16 +690,20 @@
         transform: translate(-50%, -50%);
       }
       .topics {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 8px;
+        display: flex;
+        flex: none;
+        gap: 6px;
+        overflow-x: auto;
+        scrollbar-width: none;
         margin: 8px 0 12px;
       }
       .topics button {
+        flex: none;
         background: var(--card);
         border: 1px solid var(--line);
-        border-radius: 14px;
-        padding: 12px;
+        border-radius: 999px;
+        padding: 7px 14px;
+        font-size: 13px;
         font: inherit;
         color: var(--ink);
         cursor: pointer;
@@ -1918,6 +1938,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         money: {
           label: "Money",
           door: "生",
+          relDoor: 1,
+          relN: "the money",
           stem: ["戊", "capital"],
           noun: "this money matter",
           area: "income, growth and wealth",
@@ -1925,12 +1947,18 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         love: {
           label: "Relationships",
           door: "休",
+          relDoor: 1,
+          relN: "the relationship",
+          relV: "make it work",
           noun: "this relationship",
           area: "relationships, calm and support",
         },
         travel: {
           label: "Travel",
           door: "开",
+          relDoor: 1,
+          relN: "the trip",
+          relV: "go ahead with it",
           noun: "this trip",
           area: "journeys and new openings",
         },
@@ -2088,7 +2116,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         // Asker (day stem) against the target palace. For job and work questions the target is the
         // Open door (the job itself); otherwise it is the hour stem (the outcome).
         const relP = T.relDoor ? doorP : matterP,
-          N = T.relDoor ? "the job" : "the outcome";
+          N = T.relDoor ? T.relN || "the job" : "the outcome",
+          V = T.relV || "get it";
         let relTxt = "";
         if (!T.soft && relP && selfP && relP != 5 && selfP != 5) {
           const a = PE[selfP],
@@ -2098,9 +2127,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             R = [3, `You and ${N} share a palace: you may already have what you are asking for.`];
           else if (a === b) R = [3, `You and ${N} share an element: the result is within reach.`];
           else if (GEN[b] === a)
-            R = [4, `${N[0].toUpperCase() + N.slice(1)} feeds you: you can get it.`];
+            R = [4, `${N[0].toUpperCase() + N.slice(1)} feeds you: you can ${V}.`];
           else if (BEATS[b] === a)
-            R = [-4, `${N[0].toUpperCase() + N.slice(1)} presses on you: you cannot get it.`];
+            R = [-4, `${N[0].toUpperCase() + N.slice(1)} presses on you: you cannot ${V}.`];
           else if (GEN[a] === b)
             R = [
               -1,
@@ -2109,7 +2138,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           else if (BEATS[a] === b)
             R = [
               score(selfP) > score(relP) ? 1 : -1,
-              `You press on ${N}: you can get it, but only by giving something up, such as effort. That is more likely when your own palace is stronger than its palace.`,
+              `You press on ${N}: you can ${V}, but only by giving something up, such as effort. That is more likely when your own palace is stronger than its palace.`,
             ];
           if (R) {
             sum += R[0] * 1.5;
