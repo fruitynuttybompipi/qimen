@@ -1227,9 +1227,17 @@
         margin: 4px 0 0;
       }
       .lim {
+        display: flex;
+        gap: 6px;
+        align-items: flex-start;
         font-size: 11.5px;
         color: var(--mut);
         margin-top: 10px;
+      }
+      .lim svg {
+        width: 14px;
+        height: 14px;
+        margin-top: 1px;
       }
       .ex .el {
         margin-top: 6px;
@@ -1947,19 +1955,23 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           t.appendChild(document.createTextNode(o.timing));
           out.appendChild(t);
         }
-        if (o.caution) {
+        // The standing disclaimer below already covers the wellbeing caution.
+        if (o.caution && !/reflective reading|not a diagnosis/i.test(o.caution)) {
           const t = h("div", "ln");
           t.appendChild(h("b", "", "Watch out: "));
           t.appendChild(document.createTextNode(o.caution));
           out.appendChild(t);
         }
-        out.appendChild(
-          h(
-            "div",
-            "lim",
-            "Qimen is a tool for reflection and timing, not a guarantee. Please do not rely on it alone for medical, legal or money decisions.",
-          ),
+        const lim = h(
+          "div",
+          "lim",
+          "Qimen is a tool for reflection and timing, not a guarantee. Please do not rely on it alone for medical, legal or money decisions.",
         );
+        lim.insertAdjacentHTML(
+          "afterbegin",
+          '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9" /><path d="M12 11v5M12 8h.01" /></svg>',
+        );
+        out.appendChild(lim);
         if (MODE === "beginner" && o.why && o.why.length) {
           const b = h("button", "btn g wide", "Show me how");
           b.onclick = () => startWalk(o.why.slice(0, o.max || 3));
