@@ -1413,6 +1413,34 @@
         background: var(--bg);
         z-index: 1;
       }
+      #copy.ok {
+        background: var(--ok);
+        border-color: var(--ok);
+        color: #fff;
+        animation: copied 0.45s cubic-bezier(0.2, 0.8, 0.3, 1.3);
+      }
+      #copy .ck {
+        stroke-width: 3;
+        stroke-dasharray: 24;
+        stroke-dashoffset: 24;
+        animation: draw 0.35s 0.1s ease forwards;
+      }
+      @keyframes copied {
+        0% {
+          transform: scale(0.94);
+        }
+        60% {
+          transform: scale(1.04);
+        }
+        100% {
+          transform: scale(1);
+        }
+      }
+      @keyframes draw {
+        to {
+          stroke-dashoffset: 0;
+        }
+      }
     </style>
   </head>
   <body>
@@ -1492,9 +1520,15 @@
           <textarea
             id="q"
             rows="2"
-            placeholder="Optional: your own question, to take to Claude"
+            placeholder="Optional: your own question, to take to your AI"
           ></textarea
-          ><button class="btn g" id="copy">Copy chart + question for Claude</button>
+          ><button class="btn g" id="copy">
+            <svg viewBox="0 0 24 24">
+              <rect x="9" y="9" width="11" height="11" rx="2" />
+              <path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg
+            >Copy chart + question
+          </button>
+          <div class="note">Paste it into Claude or your preferred AI agent.</div>
         </div>
       </section>
       <!-- Bottom tab bar -->
@@ -2446,16 +2480,59 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       function copyPrompt() {
         const q = $("q").value.trim() || "(write your question here)";
         const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet and opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
+        const b = $("copy"),
+          label =
+            '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>' +
+            "Copy chart + question";
         const done = () => {
-          const b = $("copy");
-          b.textContent = "Copied. Paste it into Claude.";
-          setTimeout(() => (b.textContent = "Copy chart + question for Claude"), 2200);
+          b.classList.add("ok");
+          b.innerHTML =
+            '<svg viewBox="0 0 24 24"><path class="ck" d="M5 12.5l4.5 4.5L19 7.5" /></svg>Copied. Now paste it into your AI.';
+          try {
+            navigator.vibrate && navigator.vibrate(30);
+          } catch (e) {}
+          clearTimeout(b._t);
+          b._t = setTimeout(() => {
+            b.classList.remove("ok");
+            b.innerHTML = label;
+          }, 2600);
+        };
+        // Last resort: show the text selected so you can copy it by hand.
+        const manual = () => {
+          let box = $("cpbox");
+          if (!box) {
+            box = document.createElement("textarea");
+            box.id = "cpbox";
+            box.readOnly = true;
+            box.rows = 6;
+            box.style.cssText =
+              "width:100%;font-size:12px;border:1px solid var(--line);border-radius:12px;padding:8px;background:var(--card)";
+            b.after(box);
+          }
+          box.value = t;
+          box.focus();
+          box.select();
+          b.textContent = "Select all, then Copy";
+        };
+        // Older fallback: copy through a temporary textarea (works where the clipboard API is blocked).
+        const legacy = () => {
+          const ta = document.createElement("textarea");
+          ta.value = t;
+          ta.style.cssText = "position:fixed;top:0;left:0;opacity:0";
+          document.body.appendChild(ta);
+          ta.focus();
+          ta.select();
+          ta.setSelectionRange(0, t.length);
+          let ok = false;
+          try {
+            ok = document.execCommand("copy");
+          } catch (e) {}
+          ta.remove();
+          ok ? done() : manual();
         };
         if (navigator.clipboard && navigator.clipboard.writeText)
-          navigator.clipboard.writeText(t).then(done, () => {
-            window.prompt("Copy this text:", t);
-          });
-        else window.prompt("Copy this text:", t);
+          navigator.clipboard.writeText(t).then(done, legacy);
+        else legacy();
       }
       // ══════════════════════════════════════════════════════════
       // BEGINNER MODE
