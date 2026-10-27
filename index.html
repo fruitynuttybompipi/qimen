@@ -1449,6 +1449,86 @@
           stroke-dashoffset: 0;
         }
       }
+
+      /* ══ APP FEEL: no selection, touch feedback, tab slide, sheet exit ══ */
+      body {
+        -webkit-user-select: none;
+        user-select: none;
+        -webkit-touch-callout: none;
+      }
+      textarea,
+      input,
+      .msg,
+      .rd,
+      .rs,
+      #cpbox {
+        -webkit-user-select: text;
+        user-select: text;
+      }
+      .view,
+      .pn,
+      #log {
+        -webkit-overflow-scrolling: touch;
+        overscroll-behavior: contain;
+      }
+      .tb,
+      .topics button,
+      .chips button,
+      .ib,
+      .pb,
+      .btn,
+      .p {
+        transition:
+          transform 0.18s cubic-bezier(0.2, 0.8, 0.3, 1),
+          background 0.2s,
+          box-shadow 0.2s,
+          color 0.2s;
+      }
+      .tb:active,
+      .topics button:active,
+      .chips button:active,
+      .ib:active,
+      .pb:active {
+        transform: scale(0.92);
+      }
+      .view.in-r.on {
+        animation: slideR 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+      }
+      .view.in-l.on {
+        animation: slideL 0.32s cubic-bezier(0.2, 0.8, 0.3, 1);
+      }
+      @keyframes slideR {
+        from {
+          opacity: 0;
+          transform: translateX(28px);
+        }
+      }
+      @keyframes slideL {
+        from {
+          opacity: 0;
+          transform: translateX(-28px);
+        }
+      }
+      .sheet.out .pn {
+        animation: down 0.2s ease-in forwards;
+      }
+      .sheet.out .bk {
+        animation: fadeout 0.2s ease-in forwards;
+      }
+      @keyframes down {
+        to {
+          transform: translateY(100%);
+        }
+      }
+      @keyframes fadeout {
+        to {
+          opacity: 0;
+        }
+      }
+      #out > *,
+      .rd > * {
+        animation: slide 0.3s ease both;
+      }
     </style>
   </head>
   <body>
@@ -1895,11 +1975,29 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         $("sheet").hidden = false;
       }
       // Switches between the Chart tab and the second tab.
+      let TABI = 0;
       function tab(n) {
-        document
-          .querySelectorAll(".view")
-          .forEach((v) => v.classList.toggle("on", v.id == "v-" + n));
+        const idx = n === "ask" ? 1 : 0,
+          dir = idx >= TABI ? "in-r" : "in-l";
+        TABI = idx;
+        document.querySelectorAll(".view").forEach((v) => {
+          v.classList.remove("in-r", "in-l");
+          v.classList.toggle("on", v.id == "v-" + n);
+          if (v.id == "v-" + n) v.classList.add(dir);
+        });
         document.querySelectorAll(".tb").forEach((b) => b.classList.toggle("on", b.dataset.t == n));
+      }
+      // Animate a sheet out, then hide it.
+      function shut(id, after) {
+        const el = $(id);
+        if (el.hidden) return;
+        el.classList.add("out");
+        setTimeout(() => {
+          el.classList.remove("out");
+          el.hidden = true;
+          if (after) after();
+          resetScroll();
+        }, 200);
       }
       // ══════════════════════════════════════════════════════════
       // READING CARD
@@ -3223,18 +3321,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       };
       // Close a bottom sheet (settings, guide/glossary or palace detail).
       function closeSheet(id) {
-        $(id).hidden = true;
-        if (id === "gd") markSeen();
-        resetScroll();
+        shut(id, () => id === "gd" && markSeen());
       }
       ["set", "gd", "sheet"].forEach((id) => {
         $(id).onclick = (e) => {
           if (e.target.closest && e.target.closest("[data-close]")) closeSheet(id);
         };
       });
-      $("bk").onclick = () => {
-        $("sheet").hidden = true;
-      };
+      $("bk").onclick = () => closeSheet("sheet");
       Object.entries(TOP).forEach(([k, t], i) => {
         const b = document.createElement("button");
         b.style.cssText = "--n:" + i;
@@ -3251,8 +3345,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       document.querySelectorAll(".bk[data-c]").forEach(
         (b) =>
           (b.onclick = () => {
-            $(b.dataset.c).hidden = true;
-            if (b.dataset.c === "gd") markSeen();
+            closeSheet(b.dataset.c);
           }),
       );
       now();
