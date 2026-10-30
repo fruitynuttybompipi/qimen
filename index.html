@@ -1637,6 +1637,39 @@
       .pg {
         font-weight: 900;
       }
+
+      /* five-elements cycle: icon says the summary opens */
+      summary .cy {
+        width: 16px;
+        height: 16px;
+        margin-right: 7px;
+        color: var(--acc);
+        transition: transform 0.3s;
+      }
+      details[open] summary .cy {
+        transform: rotate(180deg);
+      }
+      /* hint card buttons: Got it + Close all */
+      .hcb {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+      /* Home Screen web app: iOS draws a blurred status bar over the top, so give the masthead more room */
+      @media (display-mode: standalone) {
+        header {
+          padding-top: calc(max(env(safe-area-inset-top, 0px), 47px) + 14px);
+        }
+      }
+      :root.sa header {
+        padding-top: calc(max(env(safe-area-inset-top, 0px), 47px) + 14px);
+      }
+      /* two-character star (禽芮) in the palace sheet glyph box */
+      .pg.two {
+        font-size: 19px;
+        letter-spacing: -0.04em;
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
@@ -1764,6 +1797,8 @@
     <!-- Chart library: qimendunjia-standalone (MIT), minified. Not hand-written; do not edit. -->
     <!-- prettier-ignore -->
     <script>
+      // iOS Home Screen app (older iOS has no display-mode media query)
+      if (navigator.standalone) document.documentElement.classList.add("sa");
       addEventListener("DOMContentLoaded", () =>
         document.querySelectorAll(".sheet").forEach((el) =>
           new MutationObserver(resetScroll).observe(el, { attributes: true, attributeFilter: ["hidden"] })
@@ -2110,7 +2145,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               ? ["This palace is neutral: it can go either way.", "var(--gd)"]
               : ["This palace is hurting: expect resistance or delays here.", "var(--acc)"];
         const part = (glyph, name, zh, text) =>
-          `<div class="pt"><span class="pg z${qc(glyph)}">${glyph}</span><div><b>${name} <i>${zh}</i></b><span>${text}</span></div></div>`;
+          `<div class="pt"><span class="pg z${qc(glyph.slice(-1))}${glyph.length > 1 ? " two" : ""}">${glyph}</span><div><b>${name} <i>${zh}</i></b><span>${text}</span></div></div>`;
         return `<div class="vd" style="--vc:${vc}">${say}</div>
           <div class="parts">${part(g, `${EN[o.gate]} door`, o.gate, `Brings ${DT[g]}.`)}${part(sk, `${EN[o.star] || sk} star`, o.star, `Adds ${SX[sk]}.`)}${part(DK[o.deity] || o.deity.slice(-1), `${EN[o.deity]}`, o.deity, `Brings ${DX[dk]}.`)}</div>
           ${fl ? `<p class="nx">Also, this palace is ${fl.slice(2)}.</p>` : ""}<p class="nx">Time of year: ${monWhen(PAL[p][1])}.</p>
@@ -2501,7 +2536,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         R.actions = S.actions;
         R.summary =
           "This reads your own palace" +
-          (k ? " (palace " + k[0] + ")" : "") +
+          (k ? " (Palace " + k[0] + ")" : "") +
           " together with the Rest door (calm and recovery) and the Life door (energy and growth).";
         R.timing =
           "This chart reflects this moment only. Moods change, so check in again on another day rather than repeatedly today.";
@@ -2600,7 +2635,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               Unfavorable: `Conditions are against ${T.noun} right now.`,
             }[v];
         const tg = P[doorP].gate[0];
-        let sumTxt = `The ${EN[P[doorP].gate]} door, which governs ${T.area}, sits in palace ${doorP} with ${qual(score(doorP))} support.`;
+        let sumTxt = `The ${EN[P[doorP].gate]} door, which governs ${T.area}, sits in Palace ${doorP} with ${qual(score(doorP))} support.`;
         if (T.door === "开") sumTxt += " " + OPENPOS[PAL[doorP][1]];
         if (T.env) {
           const nw = ENV[skey(P[doorP])],
@@ -2675,14 +2710,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             "Use the time to cut risks and strengthen your position.",
           ],
         }[v].slice();
-        act.push(`Most supportive direction: ${PAL[best][1]} (palace ${best}: ${nm(best)}).`);
+        act.push(`Most supportive direction: ${PAL[best][1]} (Palace ${best}: ${nm(best)}).`);
         if (v !== "Favorable" && selfP && selfP != 5) {
           const hl = all
             .filter((p) => GEN[PE[p]] === PE[selfP])
             .sort((x, y) => score(y) - score(x))[0];
           if (hl)
             act.push(
-              `To strengthen yourself, work from the ${DN[PAL[hl][1]]} (palace ${hl}): it feeds your own palace, and its ${EN[P[hl].gate]} door points to ${DT[P[hl].gate[0]]}.`,
+              `To strengthen yourself, work from the ${DN[PAL[hl][1]]} (Palace ${hl}): it feeds your own palace, and its ${EN[P[hl].gate]} door points to ${DT[P[hl].gate[0]]}.`,
             );
         }
         const kp = keys.map((x) => x[0]),
@@ -2693,7 +2728,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             ? "A void palace is involved: expect delay or a reduced result."
             : "This chart reflects this two-hour window. If things change, cast again.";
         const worst = kp.slice().sort((a, b) => score(a) - score(b))[0];
-        let caution = `Weakest point is palace ${worst} (${nm(worst)}): ${DX[DK[P[worst].deity]]}${flags(worst)}.`;
+        let caution = `Weakest point is Palace ${worst} (${nm(worst)}): ${DX[DK[P[worst].deity]]}${flags(worst)}.`;
         if (key === "health")
           caution += " This is not medical advice; please see a professional for health concerns.";
         const reasoning =
@@ -2751,15 +2786,15 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           .map((k) => k + " = " + monWhen(k))
           .join(
             "; ",
-          )}.\nDay stem ${z.day[0]} sits in palace ${hp(z.day[0])}. Hour stem ${z.time[0]} sits in palace ${hp(z.time[0] === "甲" ? i.xunshou.slice(-1) : z.time[0])}.\n`;
+          )}.\nDay stem ${z.day[0]} sits in Palace ${hp(z.day[0])}. Hour stem ${z.time[0]} sits in Palace ${hp(z.time[0] === "甲" ? i.xunshou.slice(-1) : z.time[0])}.\n`;
         for (const p of [1, 8, 3, 4, 9, 2, 7, 6]) {
           const o = P[p];
           s += `Palace ${p} ${PAL[p][0]} (${PAL[p][1]}, ${PE[p]}): deity ${o.deity}, star ${o.star}, gate ${o.gate}, heaven stem ${o.tian}, earth stem ${o.di}${o.an ? ", hidden stem " + o.an : ""}${o.tags.length ? "; marks: " + o.tags.join(", ") : ""}\n`;
         }
         const FL = formList();
         if (FL.length)
-          s += `Special formations present: ${FL.map(([k, p]) => FM[k][0] + " in palace " + p).join("; ")}.\n`;
-        return s + `Center 5: earth stem ${P[5].di}, lodged in palace 2.`;
+          s += `Special formations present: ${FL.map(([k, p]) => FM[k][0] + " in Palace " + p).join("; ")}.\n`;
+        return s + `Center 5: earth stem ${P[5].di}, lodged in Palace 2.`;
       }
       // Copies the chart and your question to the clipboard.
       function copyPrompt() {
@@ -3170,9 +3205,17 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           if (HS[k]) continue;
           const ps = all.filter((x) => re.test(x.t)).map((x) => x.p);
           if (!ps.length) continue;
-          box.innerHTML = `<div class="hc"><div class="hcl">New to you</div><b>${ti}</b><p>${tx}</p><p class="hw">Seen in palace ${ps.join(", ")}. Tap it for more.</p><button class="btn" id="hk">Got it</button></div>`;
+          box.innerHTML = `<div class="hc"><div class="hcl">New to you</div><b>${ti}</b><p>${tx}</p><p class="hw">Seen in Palace ${ps.join(", ")}. Tap it for more.</p><div class="hcb"><button class="btn" id="hk">Got it</button><button class="btn g" id="hx">Close all</button></div></div>`;
           $("hk").onclick = () => {
             HS[k] = 1;
+            try {
+              localStorage.setItem("qm-hints", JSON.stringify(HS));
+            } catch (e) {}
+            showHints();
+          };
+          // Close all: mark every hint as seen at once (Settings > Reset learning hints brings them back).
+          $("hx").onclick = () => {
+            HINTS.forEach((_, j) => (HS[j] = 1));
             try {
               localStorage.setItem("qm-hints", JSON.stringify(HS));
             } catch (e) {}
@@ -3292,7 +3335,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         $("forms").innerHTML = L.length
           ? L.map(
               ([k, p]) =>
-                `<button class="dr" data-f="${p}"><span>${COMPI}Special formation</span><b>${FM[k][0]}</b><em>${DN[PAL[p][1]]} · palace ${p} · ${FM[k][1]}</em></button>`,
+                `<button class="dr" data-f="${p}"><span>${COMPI}Special formation</span><b>${FM[k][0]}</b><em>${DN[PAL[p][1]]} · Palace ${p} · ${FM[k][1]}</em></button>`,
             ).join("") +
             '<p class="fnote">Strength also depends on the 7 Star Path, which this page does not calculate.</p>'
           : "";
@@ -3315,7 +3358,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           t = `The door's ${b} presses the palace's ${a} (door compel): the door's effect is reduced.`;
         else if (BEATS[pe] === ge)
           t = `The palace's ${a} presses the door's ${b} (palace compel). This is stronger than door compel, and the door's effect is reduced.`;
-        return `<p class="el"><b>Elements:</b> palace ${a}, door ${b}. ${t}</p><details><summary>The five elements cycle</summary><p>Feeding: Wood → Fire → Earth → Metal → Water → Wood.</p><p>Pressing: Wood presses Earth, Earth presses Water, Water presses Fire, Fire presses Metal, Metal presses Wood.</p></details>`;
+        return `<p class="el"><b>Elements:</b> Palace ${a}, door ${b}. ${t}</p><details><summary><svg class="cy" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 12a8 8 0 0 1-13.7 5.7M4 12a8 8 0 0 1 13.7-5.7"/><path d="M18 2.5v4h-4M6 21.5v-4h4"/></svg>The five elements cycle</summary><p>Feeding: Wood → Fire → Earth → Metal → Water → Wood.</p><p>Pressing: Wood presses Earth, Earth presses Water, Water presses Fire, Fire presses Metal, Metal presses Wood.</p></details>`;
       }
       // One-line summary, best/weakest palace markers and direction cards.
       function extras() {
@@ -3345,14 +3388,14 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         let mt = "";
         if (mp && mp != 5) {
           const pr = /compel/.test(P[mp].tags.join()) ? ", though it is under pressure" : "";
-          mt = "; the palace for your matter (palace " + mp + ") looks " + qual(score(mp)) + pr;
+          mt = "; the palace for your matter (Palace " + mp + ") looks " + qual(score(mp)) + pr;
         }
         $("oneline").textContent = fuYinChart(P)
           ? "This chart is Fu Yin and cannot be read. The notes on the tiles are for study only."
           : ov + mt + ".";
         showForms();
         const dr = (c, l, p) =>
-          `<button class="dr${c}" data-f="${p}"><span>${COMPI}${l}</span><b>${DN[PAL[p][1]]}</b><em>palace ${p} · ${nm(p)}</em></button>`;
+          `<button class="dr${c}" data-f="${p}"><span>${COMPI}${l}</span><b>${DN[PAL[p][1]]}</b><em>Palace ${p} · ${nm(p)}</em></button>`;
         $("dirs").innerHTML =
           (best[1] >= 2 ? dr("", "Best direction", best[0]) : "") +
           (worst[1] < 0 ? dr(" bad", "Direction to avoid", worst[0]) : "");
