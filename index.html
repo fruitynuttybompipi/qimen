@@ -1658,11 +1658,11 @@
       /* Home Screen web app: iOS draws a blurred status bar over the top, so give the masthead more room */
       @media (display-mode: standalone) {
         header {
-          padding-top: calc(max(env(safe-area-inset-top, 0px), 47px) + 14px);
+          padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.8);
         }
       }
       :root.sa header {
-        padding-top: calc(max(env(safe-area-inset-top, 0px), 47px) + 14px);
+        padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.8);
       }
       /* two-character star (禽芮) in the palace sheet glyph box */
       .pg.two {
