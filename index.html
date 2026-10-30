@@ -1651,6 +1651,298 @@
       .hdr .l {
         font-size: 12px;
       }
+
+      /* ══ BOLDER: board and tiles (hierarchy, room, one strong focus tile) ══ */
+      .grid {
+        gap: 8px;
+      }
+      .p {
+        aspect-ratio: 1/1.46;
+        border-radius: 18px;
+        padding: 10px 3px 8px;
+        box-shadow:
+          0 1px 2px rgba(0, 0, 0, 0.05),
+          0 10px 18px -12px rgba(0, 0, 0, 0.28);
+      }
+      .p.c {
+        box-shadow: none;
+        background: transparent;
+        border: 1.5px dashed var(--line);
+      }
+      .r1 .z {
+        font-size: 24px;
+      }
+      .r2 .c:nth-child(1) .z {
+        font-size: 20px;
+      }
+      .r2 .c:nth-child(2) .z {
+        font-size: 27px;
+        line-height: 1;
+      }
+      .z.qg {
+        font-weight: 800;
+      }
+      .nb {
+        font-size: 22px;
+        font-weight: 800;
+        opacity: 0.2;
+        right: 9px;
+        bottom: 6px;
+        font-variant-numeric: tabular-nums;
+      }
+      .dot {
+        width: 8px;
+        height: 8px;
+      }
+      .p .dt {
+        gap: 4px;
+      }
+      .bd {
+        font-size: 10px;
+        font-weight: 700;
+        padding: 1px 8px;
+      }
+      .lb2 {
+        font-weight: 600;
+      }
+      .p.hl {
+        background: color-mix(in srgb, var(--br) 8%, var(--card));
+        box-shadow:
+          inset 0 0 0 2px var(--br),
+          0 14px 24px -12px rgba(0, 0, 0, 0.38);
+      }
+
+      /* ══ DELIGHT: the board settles in along the compass ring, the focus palace lands last ══ */
+      .p {
+        animation-delay: calc(var(--i, 0) * 70ms);
+      }
+      .p.hl {
+        animation:
+          pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both,
+          settle 0.5s cubic-bezier(0.3, 0.7, 0.3, 1);
+        animation-delay: calc(var(--i, 0) * 70ms), calc(var(--i, 0) * 70ms + 0.6s);
+      }
+      @keyframes settle {
+        45% {
+          transform: scale(1.04);
+        }
+      }
+
+      /* ══ AUDIT ROUND 2: tile label fit, best tile steady ══ */
+      .r1,
+      .r2 {
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.1fr) minmax(0, 1.3fr);
+      }
+      .c .s.sm {
+        font-size: 8.5px;
+        letter-spacing: -0.02em;
+      }
+      .bd {
+        font-size: 9.5px;
+        padding: 1px 6px;
+      }
+      .p.best {
+        animation: pop 0.5s cubic-bezier(0.2, 0.8, 0.3, 1.2) both;
+        animation-delay: calc(var(--i, 0) * 70ms);
+        box-shadow:
+          inset 0 0 0 1px var(--ok),
+          0 10px 18px -12px rgba(0, 0, 0, 0.28);
+      }
+
+      /* ══ DELIGHT 2: the verdict is stamped onto the reading, then the answer follows ══ */
+      :is(#out, #log) .badge {
+        transform-origin: left center;
+      }
+      :is(#out, #log) .badge.stamp {
+        animation: stamp 0.42s cubic-bezier(0.2, 0.9, 0.3, 1.25) both;
+      }
+      :is(#out, #log) .badge.settle {
+        animation: settleIn 0.35s ease-out both;
+      }
+      :is(#out, #log) .badge ~ .hd {
+        animation: slide 0.35s 0.18s ease both;
+      }
+      @keyframes stamp {
+        from {
+          opacity: 0;
+          transform: scale(1.55) rotate(-5deg);
+        }
+        55% {
+          opacity: 1;
+        }
+        to {
+          transform: none;
+        }
+      }
+      @keyframes settleIn {
+        from {
+          opacity: 0;
+          transform: translateY(-4px);
+        }
+      }
+
+      /* Badge fixes: --gold was never defined (the Mixed badge was invisible); dark badges need dark text. */
+      :root {
+        --gold: var(--gd);
+      }
+      :root[data-theme="dark"] .badge {
+        color: #0e1018;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme="light"]) .badge {
+          color: #0e1018;
+        }
+      }
+
+      /* ══ Palace sheet: verdict, parts and details with a clear hierarchy ══ */
+      .pn h2 small {
+        display: block;
+        font-size: 13px;
+        font-weight: 500;
+        color: var(--mut);
+        margin-top: 2px;
+      }
+      .vd {
+        display: flex;
+        gap: 10px;
+        align-items: flex-start;
+        font-size: 16.5px;
+        font-weight: 650;
+        line-height: 1.35;
+        padding: 12px 14px;
+        margin: 4px 0 14px;
+        border-radius: 14px;
+        background: color-mix(in srgb, var(--vc) 13%, var(--card));
+        box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--vc) 32%, transparent);
+      }
+      .vd::before {
+        content: "";
+        flex: none;
+        width: 10px;
+        height: 10px;
+        margin-top: 6px;
+        border-radius: 50%;
+        background: var(--vc);
+      }
+      .parts {
+        margin-bottom: 4px;
+      }
+      .pt {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        padding: 10px 0;
+        border-bottom: 1px solid var(--line);
+      }
+      .pg {
+        flex: none;
+        width: 46px;
+        height: 46px;
+        border-radius: 13px;
+        background: var(--bg);
+        display: grid;
+        place-items: center;
+        font-size: 27px;
+        line-height: 1;
+      }
+      .pt b {
+        display: block;
+        font-size: 15.5px;
+        font-weight: 650;
+        color: var(--ink);
+      }
+      .pt b i {
+        font-style: normal;
+        font-weight: 500;
+        color: var(--mut);
+        font-size: 13px;
+        margin-left: 4px;
+      }
+      .pt div > span {
+        display: block;
+        font-size: 14.5px;
+        line-height: 1.4;
+        color: var(--mut);
+      }
+      .nx {
+        margin: 10px 0 0;
+        font-size: 14px;
+        line-height: 1.45;
+        color: var(--mut);
+      }
+      .ex2 {
+        margin: 12px 0 6px;
+        padding: 10px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--line);
+        font-size: 14px;
+        line-height: 1.45;
+      }
+      .ex2 p {
+        margin: 0 0 6px;
+      }
+      #sh-b .lb {
+        margin: 18px 0 4px;
+      }
+      #sh-b .rw {
+        align-items: baseline;
+        padding: 9px 0;
+      }
+      #sh-b .rw span:first-child {
+        font-size: 13px;
+      }
+      #sh-b .rw span:last-child {
+        font-size: 15.5px;
+        font-weight: 600;
+        color: var(--ink);
+        text-align: right;
+      }
+      .tg {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 6px;
+        margin-top: 6px;
+      }
+      .tg div {
+        margin: 0;
+        padding: 5px 11px;
+        border-radius: 999px;
+        background: var(--bg);
+        font-size: 13px;
+        color: var(--ink);
+      }
+
+      /* ══ DELIGHT 3: a palace explains itself in reading order, verdict first (quick, replays on every open) ══ */
+      #sh-b .vd,
+      #sh-b .pt,
+      #sh-b .nx,
+      #sh-b .ex2 {
+        animation: slide 0.24s ease-out both;
+      }
+      #sh-b .vd {
+        animation-delay: 0.04s;
+      }
+      #sh-b .pt:nth-child(1) {
+        animation-delay: 0.1s;
+      }
+      #sh-b .pt:nth-child(2) {
+        animation-delay: 0.14s;
+      }
+      #sh-b .pt:nth-child(3) {
+        animation-delay: 0.18s;
+      }
+      #sh-b .nx,
+      #sh-b .ex2 {
+        animation-delay: 0.22s;
+      }
+      #sh-b .vd::before {
+        animation: dotIn 0.4s 0.12s cubic-bezier(0.2, 0.9, 0.3, 1.4) both;
+      }
+      @keyframes dotIn {
+        from {
+          transform: scale(0);
+        }
+      }
     </style>
   </head>
   <body>
@@ -1771,7 +2063,7 @@
       <div class="bk" id="bk"></div>
       <div class="pn">
         <button class="x" data-close aria-label="Close">×</button>
-        <h2 id="sh-t"></h2>
+        <h2 id="sh-t">Palace details</h2>
         <div id="sh-b"></div>
       </div>
     </div>
@@ -1973,7 +2265,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         QD = "死伤惊杜芮蓬柱冲己庚辛壬癸蛇虎玄陈雀",
         qc = (z) => (QG.includes(z) ? " qg" : QD.includes(z) ? " qd" : "");
       const cell = (z, s, u, x) =>
-        `<div class="c"><span class="z${qc(z)}">${z}${u ? `<sup>${u}</sup>` : ""}</span><span class="s">${s}</span>${x || ""}</div>`;
+        `<div class="c"><span class="z${qc(z)}">${z}${u ? `<sup>${u}</sup>` : ""}</span><span class="s${String(s).length > 7 ? " sm" : ""}">${s}</span>${x || ""}</div>`;
       // Palace holding a stem on the heaven plate (0 if none).
       const hp = (st) => {
         for (const p of [1, 2, 3, 4, 6, 7, 8, 9]) if (sp2(P[p].tian).m === st) return p;
@@ -2019,7 +2311,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         } else fyb.hidden = true;
         const dayP = hp(ds),
           hourP = hp(hs === "甲" ? i.xunshou.slice(-1) : hs);
-        const IDX = { 4: 0, 9: 1, 2: 2, 3: 3, 5: 4, 7: 5, 8: 6, 1: 7, 6: 8 },
+        const RING = { 1: 0, 8: 1, 3: 2, 4: 3, 9: 4, 2: 5, 7: 6, 6: 7, 5: 8 },
+          IDX = { 4: 0, 9: 1, 2: 2, 3: 3, 5: 4, 7: 5, 8: 6, 1: 7, 6: 8 },
           ju = r.raw.juShu.number,
           FN = (p) => ((((p + ju - 6) % 9) + 9) % 9) + 1;
         const T = (p) => {
@@ -2027,7 +2320,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             n = IDX[p];
           if (p == 5) {
             const e = sp2(o.di);
-            return `<div class="p c" style="--i:${n}"><div class="r1" style="grid-template-columns:1fr">${cell(e.m, PYS[e.m], "")}</div><div class="c"><span class="s">Center</span></div></div>`;
+            return `<div class="p c" style="--i:${RING[p]}"><div class="r1" style="grid-template-columns:1fr">${cell(e.m, PYS[e.m], "")}</div><div class="c"><span class="s">Center</span></div></div>`;
           }
           const th = sp2(o.tian),
             ea = sp2(o.di),
@@ -2039,7 +2332,16 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             (fuP && fuP.p == p ? '<i class="bd">甲</i>' : "");
           const hl = shiP && shiP.p == p ? " hl" : "",
             dots = o.tags.map((t) => `<i class="dot ${tc(t)}"></i>`).join("");
-          return `<button class="p${hl}" data-p="${p}" style="--i:${n}"><div class="r1">${cell(th.m, PYS[th.m], th.l, bd)}${cell(sk, PYT[sk] || "", o.star === "禽芮" ? "禽" : "")}${cell(dk, EN[o.deity] || "", "")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m, PYS[ea.m], ea.l)}${cell(o.gate[0], EN[o.gate] || "", "", hl ? '<i class="bd">Envoy</i>' : "")}<span class="nb">${FN(p)}</span></div></button>`;
+          const nm = [
+            p == dayP ? (ASKY ? "asker" : "day stem") : "",
+            p == hourP ? "hour stem" : "",
+            hl ? "envoy door" : "",
+            ...o.tags,
+          ]
+            .filter(Boolean)
+            .join(", ");
+          const lab = `Palace ${p}, ${PAL[p][1]}: ${EN[o.gate] || o.gate} door, ${PYT[sk] || sk} star, ${EN[o.deity] || o.deity}, heaven stem ${PYS[th.m] || th.m}, earth stem ${PYS[ea.m] || ea.m}${nm ? ". Marks: " + nm : ""}. Tap for details`;
+          return `<button class="p${hl}" data-p="${p}" aria-label="${lab.replace(/"/g, "")}" style="--i:${RING[p]}"><div class="r1">${cell(th.m, PYS[th.m], th.l, bd)}${cell(sk, PYT[sk] || "", o.star === "禽芮" ? "禽" : "")}${cell(dk, EN[o.deity] || "", "")}</div><span class="dt">${dots}</span><div class="r2">${cell(ea.m, PYS[ea.m], ea.l)}${cell(o.gate[0], EN[o.gate] || "", "", hl ? '<i class="bd">Envoy</i>' : "")}<span class="nb">${FN(p)}</span></div></button>`;
         };
         const L = (p, v) =>
             `<div class="lb2${v ? " v" : ""}">${PAL[p][1]} ${PAL[p][0]} ${p} ${PE[p]}</div>`,
@@ -2080,21 +2382,45 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const o = P[p],
           [zh, dir] = PAL[p],
           rw = (a, b) => `<div class="rw"><span>${a}</span><span>${b}</span></div>`;
-        $("sh-t").textContent = `Palace ${p} · ${zh} · ${dir} · ${PE[p]}`;
-        $("sh-b").innerHTML =
+        $("sh-t").innerHTML = `Palace ${p}<small>${dir} · ${zh} · ${PE[p]}</small>`;
+        const det =
           rw("Deity 神", `${o.deity} ${EN[o.deity] || ""}`) +
           rw("Star 星", `${o.star} ${EN[o.star] || ""}`) +
           rw("Door 门", `${o.gate} ${EN[o.gate] || ""}`) +
           rw("Heaven stem 天盘", o.tian) +
           rw("Earth stem 地盘", o.di) +
           rw("Ju number", ((((p + chart.raw.juShu.number - 6) % 9) + 9) % 9) + 1) +
-          (o.an ? rw("Hidden stem 暗干", o.an) : "") +
+          (o.an ? rw("Hidden stem 暗干", o.an) : "");
+        $("sh-b").innerHTML =
+          (MODE === "beginner" ? sheetMeaning(p) : "") +
+          `<div class="lb">Details</div>` +
+          det +
           (o.tags.length
-            ? `<div class="tg">${o.tags.map((t) => `<div>• ${t}</div>`).join("")}</div>`
+            ? `<div class="lb">Marks</div><div class="tg">${o.tags.map((t) => `<div>${t}</div>`).join("")}</div>`
             : "");
-        if (MODE === "beginner") $("sh-b").innerHTML = explain(p) + $("sh-b").innerHTML;
         $("sh-b").innerHTML += '<button class="btn g wide" data-close>Close</button>';
         $("sheet").hidden = false;
+      }
+      // Palace meaning for the sheet: verdict first, then door, star and deity, then the elements.
+      function sheetMeaning(p) {
+        const o = P[p],
+          g = o.gate[0],
+          sk = skey(o),
+          dk = DK[o.deity],
+          s = score(p),
+          fl = flags(p);
+        const [say, vc] =
+          s >= 2
+            ? ["This palace is helping: things here tend to go your way.", "var(--ok)"]
+            : s >= 0
+              ? ["This palace is neutral: it can go either way.", "var(--gd)"]
+              : ["This palace is hurting: expect resistance or delays here.", "var(--acc)"];
+        const part = (glyph, name, zh, text) =>
+          `<div class="pt"><span class="pg z${qc(glyph)}">${glyph}</span><div><b>${name} <i>${zh}</i></b><span>${text}</span></div></div>`;
+        return `<div class="vd" style="--vc:${vc}">${say}</div>
+          <div class="parts">${part(g, `${EN[o.gate]} door`, o.gate, `Brings ${DT[g]}.`)}${part(sk, `${EN[o.star] || sk} star`, o.star, `Adds ${SX[sk]}.`)}${part(DK[o.deity] || o.deity.slice(-1), `${EN[o.deity]}`, o.deity, `Brings ${DX[dk]}.`)}</div>
+          ${fl ? `<p class="nx">Also, this palace is ${fl.slice(2)}.</p>` : ""}<p class="nx">Time of year: ${MON[PAL[p][1]]}.</p>
+          <div class="ex2">${ELM(p)}</div>`;
       }
       // Switches between the Chart tab and the second tab.
       let TABI = 0;
@@ -2146,6 +2472,8 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const v = VC[o.verdict] ? o.verdict : "Mixed",
           b = h("span", "badge", String(o.label || v).slice(0, 24));
         b.style.background = VC[v];
+        // A good or mixed verdict is stamped down; a hard one just settles in, with no flourish.
+        b.classList.add(v === "Favorable" || v === "Mixed" ? "stamp" : "settle");
         out.appendChild(b);
         out.appendChild(h("div", "hd", o.headline));
         if (o.summary) out.appendChild(h("div", "sm", o.summary));
