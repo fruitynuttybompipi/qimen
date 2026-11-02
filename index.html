@@ -1658,17 +1658,21 @@
       /* Home Screen web app: iOS draws a blurred status bar over the top, so give the masthead more room */
       @media (display-mode: standalone) {
         header {
-          padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.8);
+          padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.64);
         }
       }
       :root.sa header {
-        padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.8);
+        padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 0.64);
       }
       /* two-character star (禽芮) in the palace sheet glyph box */
       .pg.two {
         font-size: 19px;
         letter-spacing: -0.04em;
         white-space: nowrap;
+      }
+      /* reading summary keeps its paragraph breaks (Buying adds a checklist paragraph) */
+      .rd .sm {
+        white-space: pre-line;
       }
     </style>
   </head>
@@ -2147,9 +2151,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const part = (glyph, name, zh, text) =>
           `<div class="pt"><span class="pg z${qc(glyph.slice(-1))}${glyph.length > 1 ? " two" : ""}">${glyph}</span><div><b>${name} <i>${zh}</i></b><span>${text}</span></div></div>`;
         return `<div class="vd" style="--vc:${vc}">${say}</div>
-          <div class="parts">${part(g, `${EN[o.gate]} door`, o.gate, `Brings ${DT[g]}.`)}${part(sk, `${EN[o.star] || sk} star`, o.star, `Adds ${SX[sk]}.`)}${part(DK[o.deity] || o.deity.slice(-1), `${EN[o.deity]}`, o.deity, `Brings ${DX[dk]}.`)}</div>
-          ${fl ? `<p class="nx">Also, this palace is ${fl.slice(2)}.</p>` : ""}<p class="nx">Time of year: ${monWhen(PAL[p][1])}.</p>
-          <div class="ex2">${ELM(p)}</div>`;
+                <div class="parts">${part(g, `${EN[o.gate]} door`, o.gate, `Brings ${DT[g]}.`)}${part(sk, `${EN[o.star] || sk} star`, o.star, `Adds ${SX[sk]}.`)}${part(DK[o.deity] || o.deity.slice(-1), `${EN[o.deity]}`, o.deity, `Brings ${DX[dk]}.`)}</div>
+                ${fl ? `<p class="nx">Also, this palace is ${fl.slice(2)}.</p>` : ""}<p class="nx">Time of year: ${monWhen(PAL[p][1])}.</p>
+                <div class="ex2">${ELM(p)}</div>`;
       }
       // Switches between the Chart tab and the second tab.
       let TABI = 0;
@@ -2400,6 +2404,18 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           soft: 1,
           noun: "your inner state",
           area: "calm, rest and recovery",
+        },
+        buy: {
+          label: "Buying",
+          door: "生",
+          relDoor: 1,
+          relN: "the item",
+          relV: "buy it",
+          relNo: "it would work against you rather than serve you",
+          stem: ["戊", "your money"],
+          buy: 1,
+          noun: "this purchase",
+          area: "value, money and the deal",
         },
         career: {
           label: "Career",
@@ -2658,6 +2674,9 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           try {
             v = read(key).verdict;
           } catch (e) {}
+          // Only suggest waking hours (7 AM to 11 PM) as slots to act in.
+          const hh = winAt(k).getHours();
+          if (hh < 7 || hh >= 23) return true;
           if (v === "Favorable") good = winLab(winAt(k));
           else if (v === "Mixed" && !mixed) mixed = winLab(winAt(k));
           return !good;
@@ -2668,27 +2687,42 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // Plain timing: 1) the best slot coming up to do the step, 2) when the hard part should ease.
       function timingText(key, v, keyTags) {
         const T = TOP[key],
-          step = T.soft ? "your calming step" : "the first step",
-          hard = T.soft ? "This heavy feeling" : "This delay",
+          step = T.soft
+            ? "Do your calming step"
+            : T.buy
+              ? "If you still want it, buy"
+              : "Do the first step",
+          hard = T.soft
+            ? "This heavy feeling"
+            : T.buy
+              ? "A better deal or a clearer head"
+              : "This delay",
           out = [];
         let w = { good: "", mixed: "" };
-        if (v === "Favorable") out.push(`Do ${step} now, in this two-hour slot; it is a good one.`);
+        if (v === "Favorable") out.push(`${step} now, in this two-hour slot; it is a good one.`);
         else {
           w = nextWin(key);
           const slot = w.good || w.mixed;
           out.push(
             slot
-              ? `Do ${step} ${slot}; that is the best slot coming up.`
+              ? `${step} ${slot}; that is the best slot coming up.`
               : `No good slot in the next day, so rest on it and cast again tomorrow.`,
           );
         }
         if (/void/.test(keyTags)) {
           const f = voidFill();
-          if (f.dy) out.push(`${hard} should ease by ${f.dy}, when the empty palace fills.`);
+          if (f.dy)
+            out.push(
+              `${hard} ${T.buy ? "should come by" : "should ease by"} ${f.dy}, when the empty palace fills.`,
+            );
           else if (f.wh)
-            out.push(`${hard} should start to ease from ${f.wh}, when the empty palace fills.`);
+            out.push(
+              `${hard} ${T.buy ? "should come from" : "should start to ease from"} ${f.wh}, when the empty palace fills.`,
+            );
         } else if (v !== "Favorable" && w.good)
-          out.push(`${hard} should start to ease from ${w.good}.`);
+          out.push(
+            `${hard} ${T.buy ? "should come from" : "should start to ease from"} ${w.good}.`,
+          );
         if (/horse/.test(keyTags)) out.push("Once it starts, things can move fast.");
         return out.join(" ");
       }
@@ -2767,7 +2801,10 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           else if (GEN[b] === a)
             R = [4, `${N[0].toUpperCase() + N.slice(1)} feeds you: you can ${V}.`];
           else if (BEATS[b] === a)
-            R = [-4, `${N[0].toUpperCase() + N.slice(1)} presses on you: you cannot ${V}.`];
+            R = [
+              -4,
+              `${N[0].toUpperCase() + N.slice(1)} presses on you: ${T.relNo || "you cannot " + V}.`,
+            ];
           else if (GEN[a] === b)
             R = [
               -1,
@@ -2814,6 +2851,54 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
               " Your boss or superior (the Chief) is in your own palace, so they are likely to back you.";
         }
         if (ASKY) sumTxt += ` Read for someone born in ${ASKY} (stem ${yearStem(ASKY)}).`;
+        if (T.buy) {
+          // Buying: the Life door palace is the item, Wu is your money, the day stem is you.
+          const ip = P[doorP],
+            sp = selfP && selfP != 5 ? P[selfP] : null,
+            wp = hp("戊"),
+            why1 = [],
+            why2 = [];
+          [ip, sp].forEach((o) => {
+            if (!o) return;
+            const d = DK[o.deity];
+            if (d === "蛇") why1.push("the Snake stirs restless wanting");
+            if (d === "虎") why1.push("the Tiger pushes for a quick decision");
+            if (d === "天") why1.push("the Nine Heaven pulls you to overreach");
+            if (skey(o) === "英") why1.push("the Ying star brings excitement that fades");
+            if (/horse/.test(o.tags.join("|"))) why1.push("the horse adds a rush");
+          });
+          if (/void/.test(ip.tags.join("|")))
+            why2.push("the item's palace is empty, so it may go unused");
+          if (DK[ip.deity] === "玄") why2.push("the Black Tortoise warns of hidden loss");
+          if (/^(芮|禽芮|蓬)$/.test(skey(ip)))
+            why2.push(`the ${EN[ip.star] || ip.star} star points to wear and trouble`);
+          if (wp && score(wp) <= -2)
+            why2.push("your money palace is weak, so it may strain your budget");
+          // One sign alone is common, so impulse and waste need two signs (or a void or Tortoise item palace).
+          const u = (a) => [...new Set(a)].slice(0, 2).join(" and ");
+          sumTxt +=
+            "\n\nShould you buy? " +
+            {
+              Favorable: "Yes, it looks like good value.",
+              Mixed: "Maybe, but only if it is something you planned for.",
+              Wait: "Not yet.",
+              Unfavorable: "Better not, for now.",
+            }[v] +
+            " Impulse check: " +
+            (why1.length >= 2
+              ? `this has the marks of an impulse buy (${u(why1)}), so sleep on it for a day.`
+              : "it does not look like an impulse buy.") +
+            " Waste check: " +
+            (why2.length >= 2 || /void/.test(ip.tags.join("|")) || DK[ip.deity] === "玄"
+              ? `there is a risk it ends up wasted (${u(why2)}).`
+              : "it looks likely to be used and to hold its value.") +
+            " Better deal? " +
+            (v === "Favorable"
+              ? "No need to wait; this looks fair."
+              : /void/.test(ip.tags.join("|"))
+                ? "Waiting looks wiser; a better deal is likely once the empty palace fills (see Timing)."
+                : "Waiting a little may help; Timing shows the next good slot.");
+        }
         if (T.med) {
           const sp = selfP && P[selfP],
             ill = keys.find((x) => x[1] === "illness");
@@ -3128,6 +3213,11 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           "Mindfulness",
           "Give me a gentle check-in on how I am doing inside: am I moving forward or feeling stuck, and what could help?",
         ],
+        [
+          "buy",
+          "Buying",
+          "Should I buy this? Is it an impulse buy, will it end up wasted, or should I wait for a better deal?",
+        ],
         ["career", "Career", "Is this a good time to move on my career opportunity?"],
         ["money", "Money", "Is this a good time for my money matter?"],
         ["love", "Relationships", "How do things look for my relationship right now?"],
@@ -3256,11 +3346,11 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         openSheet(
           "gd",
           `<h2>How to read this</h2>
-<div class="stp"><b>1. What it is</b><p>Qimen Dunjia reads a chart cast for one moment. The chart describes the situation at the time you ask.</p></div>
-<div class="stp"><b>2. How to use it</b><p>Ask your question first, then cast. Press <i>Now</i> and <i>Cast</i> when you actually have the question; a sign from your day, such as news about the matter, is a good cue. Pick a topic, then read the answer. Trust the first chart: asking again at another time to get a nicer result defeats the method.</p></div>
-<div class="stp"><b>3. Reading a palace</b><p>The 8 outer palaces are directions. Top row of a tile: heaven stem (people), star (conditions), deity (unseen forces). Bottom row: earth stem and the door (action). The big corner number is the Ju number.</p><p>Bold blue characters are the supportive ones and lighter grey characters are the difficult ones.</p><p>Dots: red is caution, green is void or horse, gold is feeding. Badges: Day and Hour mark your day and hour stems, 甲 marks the hidden leader (the Chief palace), and Envoy marks the lead door.</p></div>
-<div class="stp"><b>4. Tap to learn</b><p>Tap any palace for its meaning. Tap a reason in a reading to jump to its palace.</p></div>
-<button class="btn wide" id="g-ok">Got it</button><button class="btn g wide" id="g-gl">Open glossary</button>`,
+      <div class="stp"><b>1. What it is</b><p>Qimen Dunjia reads a chart cast for one moment. The chart describes the situation at the time you ask.</p></div>
+      <div class="stp"><b>2. How to use it</b><p>Ask your question first, then cast. Press <i>Now</i> and <i>Cast</i> when you actually have the question; a sign from your day, such as news about the matter, is a good cue. Pick a topic, then read the answer. Trust the first chart: asking again at another time to get a nicer result defeats the method.</p></div>
+      <div class="stp"><b>3. Reading a palace</b><p>The 8 outer palaces are directions. Top row of a tile: heaven stem (people), star (conditions), deity (unseen forces). Bottom row: earth stem and the door (action). The big corner number is the Ju number.</p><p>Bold blue characters are the supportive ones and lighter grey characters are the difficult ones.</p><p>Dots: red is caution, green is void or horse, gold is feeding. Badges: Day and Hour mark your day and hour stems, 甲 marks the hidden leader (the Chief palace), and Envoy marks the lead door.</p></div>
+      <div class="stp"><b>4. Tap to learn</b><p>Tap any palace for its meaning. Tap a reason in a reading to jump to its palace.</p></div>
+      <button class="btn wide" id="g-ok">Got it</button><button class="btn g wide" id="g-gl">Open glossary</button>`,
         );
         $("g-ok").onclick = () => {
           $("gd").hidden = true;
@@ -3665,6 +3755,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           love: `<svg viewBox="0 0 24 24"><path d="M12 20s-7-4.5-9-9a5 5 0 0 1 9-3 5 5 0 0 1 9 3c-2 4.5-9 9-9 9z"/></svg>`,
           travel: `<svg viewBox="0 0 24 24"><path d="M21 3L3 10l7 3 3 7 8-17z"/></svg>`,
           health: `<svg viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6"/></svg>`,
+          buy: `<svg viewBox="0 0 24 24"><path d="M5 8h14l-1 12H6z"/><path d="M9 8V6a3 3 0 0 1 6 0v2"/></svg>`,
         },
         COMPI = `<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M15.5 8.5l-2 5-5 2 2-5z"/></svg>`;
       // ══════════════════════════════════════════════════════════
