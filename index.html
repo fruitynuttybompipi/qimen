@@ -1679,6 +1679,13 @@
       html {
         background: var(--card);
       }
+      /* build timestamp at the foot of Settings */
+      .ver {
+        margin: 14px 0 0;
+        text-align: center;
+        font-size: 12.5px;
+        color: var(--mut);
+      }
     </style>
   </head>
   <body>
@@ -3275,7 +3282,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             .map((y) => `<option value="${y}"${y === ASKY ? " selected" : ""}>${y}</option>`)
             .join(
               "",
-            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">${I.book}How to read this</button><button class="btn g wide" id="s-gl">${I.list}Glossary</button><button class="btn g wide" id="s-rh">${I.reset}Reset learning hints</button>`,
+            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">${I.book}How to read this</button><button class="btn g wide" id="s-gl">${I.list}Glossary</button><button class="btn g wide" id="s-rh">${I.reset}Reset learning hints</button><p class="ver">Last updated 23:23 02/11/2026</p>`,
         );
         document.querySelectorAll("#set-b [data-m]").forEach(
           (b) =>
