@@ -19,7 +19,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="QMDJ" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <!-- status bar colour = page background, so the top is seamless (kept in sync by applyTheme) -->
+    <meta name="theme-color" content="#efe5cc" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#16130e" media="(prefers-color-scheme: dark)" />
     <link
       rel="manifest"
       href="data:application/manifest+json,%7B%22name%22%3A%22QMDJ%22%2C%22short_name%22%3A%22QMDJ%22%2C%22display%22%3A%22standalone%22%2C%22background_color%22%3A%22%23efe5cc%22%2C%22theme_color%22%3A%22%23b0291a%22%2C%22icons%22%3A%5B%7B%22src%22%3A%22data%3Aimage/svg%2Bxml%2C%253Csvg%2520xmlns%253D%2522http%253A//www.w3.org/2000/svg%2522%2520viewBox%253D%25220%25200%2520512%2520512%2522%253E%253Crect%2520width%253D%2522512%2522%2520height%253D%2522512%2522%2520fill%253D%2522%2523b0291a%2522/%253E%253Ctext%2520x%253D%2522256%2522%2520y%253D%2522340%2522%2520font-size%253D%2522280%2522%2520text-anchor%253D%2522middle%2522%2520fill%253D%2522%2523f8f1de%2522%2520font-family%253D%2522sans-serif%2522%253E%25E5%25A5%2587%253C/text%253E%253C/svg%253E%22%2C%22sizes%22%3A%22512x512%22%2C%22type%22%3A%22image/svg%2Bxml%22%2C%22purpose%22%3A%22any%22%7D%5D%7D"
@@ -1672,15 +1675,6 @@
         font-size: 12.5px;
         color: var(--mut);
       }
-      /* Home Screen web app: iOS draws a blurred status bar over the top, so give the masthead more room */
-      @media (display-mode: standalone) {
-        header {
-          padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 1.1);
-        }
-      }
-      :root.sa header {
-        padding-top: calc((max(env(safe-area-inset-top, 0px), 47px) + 14px) * 1.1);
-      }
     </style>
   </head>
   <body>
@@ -3154,6 +3148,18 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         }
         THEME === "auto" ? r.removeAttribute("data-theme") : r.setAttribute("data-theme", THEME);
         r.style.colorScheme = THEME === "auto" ? "" : THEME;
+        // A forced Light or Dark theme overrides the phone setting for the status bar colour too.
+        document.querySelectorAll('meta[name="theme-color"]').forEach((m) => {
+          const dk = /dark/.test(m.media);
+          m.content =
+            THEME === "auto"
+              ? dk
+                ? "#16130e"
+                : "#efe5cc"
+              : THEME === "dark"
+                ? "#16130e"
+                : "#efe5cc";
+        });
       };
       applyTheme();
       let MODE = "beginner";
@@ -3277,7 +3283,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             .map((y) => `<option value="${y}"${y === ASKY ? " selected" : ""}>${y}</option>`)
             .join(
               "",
-            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">${I.book}How to read this</button><button class="btn g wide" id="s-gl">${I.list}Glossary</button><button class="btn g wide" id="s-rh">${I.reset}Reset learning hints</button><p class="ver">Last updated 23:43 02/11/2026</p>`,
+            )}</select></div><p class="hint">If you cast for another person, choose Someone and pick their birth year. Their year stem then stands for them in the readings, in place of your day stem.</p><button class="btn g wide" id="s-guide">${I.book}How to read this</button><button class="btn g wide" id="s-gl">${I.list}Glossary</button><button class="btn g wide" id="s-rh">${I.reset}Reset learning hints</button><p class="ver">Last updated 23:38 02/11/2026</p>`,
         );
         document.querySelectorAll("#set-b [data-m]").forEach(
           (b) =>
