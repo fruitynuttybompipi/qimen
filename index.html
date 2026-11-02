@@ -2776,6 +2776,58 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         show(out, read(k));
       }
       // Plain-text description of the chart (for 'copy to Claude').
+      // Near-term timing worked out in code, so the AI never has to count calendar days or hours itself:
+      // the next six two-hour windows rated for every topic, and the next hour and day that fill the hour void.
+      function nearTiming() {
+        const t0 = castDate(),
+          BR = "子丑寅卯辰巳午未申酉戌亥",
+          kong = (chart.info.kong || "").split(""),
+          lb = (h) => (h % 12 || 12) + (h < 12 ? " AM" : " PM"),
+          dl = (d) =>
+            d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }),
+          hb = (h) => BR[((h + 1) >> 1) % 12],
+          sv = [chart, P],
+          out = [];
+        let h0 = t0.getHours();
+        h0 = h0 % 2 ? h0 : h0 === 0 ? 23 : h0 - 1;
+        try {
+          for (let k = 1; k <= 6; k++) {
+            const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate(), h0 + 2 * k, 0),
+              r = QM.calculate(d, { lateZiHourMode: "next-day" });
+            if (r.error) continue;
+            chart = r;
+            P = build(r);
+            const vs = Object.entries(TOP).map(([key, t]) => {
+              let v = "Mixed";
+              try {
+                v = read(key).verdict;
+              } catch (e) {}
+              return t.label + " " + SH[v];
+            });
+            out.push(
+              `${dl(d)} ${lb(d.getHours())}-${lb((d.getHours() + 2) % 24)}: ${vs.join(", ")}`,
+            );
+          }
+        } finally {
+          chart = sv[0];
+          P = sv[1];
+        }
+        let fillH = "";
+        for (let k = 0; k < 12 && !fillH; k++) {
+          const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate(), h0 + 2 * k, 0);
+          if (kong.includes(hb(d.getHours())))
+            fillH = `${k ? "" : "the current window, "}${dl(d)} ${lb(d.getHours())}-${lb((d.getHours() + 2) % 24)} (${hb(d.getHours())} hour)`;
+        }
+        let fillD = "";
+        for (let k = 0; k < 12 && !fillD; k++) {
+          const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + k, 12, 0),
+            r = QM.calculate(d, { lateZiHourMode: "next-day" });
+          const b = !r.error && r.info.siZhu.day[1];
+          if (b && kong.includes(b))
+            fillD = `${k ? dl(d) + ", " + k + " day" + (k > 1 ? "s" : "") + " away" : "today"} (${r.info.siZhu.day} day)`;
+        }
+        return `Near-term timing (computed from the cast time):\nNext two-hour windows, rated per topic: ${out.join(" | ")}.\nThe hour void ${kong.join("")} next fills in the window ${fillH || "not found"} and on the day ${fillD || "not found in 12 days"}.\n`;
+      }
       function chartText() {
         const r = chart,
           i = r.info,
@@ -2794,12 +2846,13 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const FL = formList();
         if (FL.length)
           s += `Special formations present: ${FL.map(([k, p]) => FM[k][0] + " in Palace " + p).join("; ")}.\n`;
+        s += nearTiming();
         return s + `Center 5: earth stem ${P[5].di}, lodged in Palace 2.`;
       }
       // Copies the chart and your question to the clipboard.
       function copyPrompt() {
         const q = $("q").value.trim() || "(write your question here)";
-        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet and opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
+        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet; it usually fills within hours or days (use the computed Near-term timing), and for big long-range matters it opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps built from the chart (door = kind of action, star = setting, deity = who helps, palace direction = where), then timing. For timing give the nearest first, using only the Near-term timing lines in the chart (the next two-hour window rated Good for my topic, or the nearest Mixed one if none is Good, and the hour and day the void fills); do not calculate dates yourself, and use direction months only for long-range life decisions.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
         const b = $("copy"),
           label =
             '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>' +
