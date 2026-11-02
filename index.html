@@ -2475,10 +2475,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         const T = P[p].tags.join("|"),
           f = [];
         if (/void/.test(T))
-          f.push(
-            "marked void: not ready or not available yet, possibly opening around " +
-              monWhen(PAL[p][1]),
-          );
+          f.push("marked void: not ready or not available yet (Timing below says when it unlocks)");
         if (/Palace compel/.test(T)) f.push("under strong pressure from its palace");
         else if (/Door compel/.test(T)) f.push("under some pressure from its palace");
         if (/Fan Yin/.test(T)) f.push("reversed (a very negative sign)");
@@ -2528,18 +2525,168 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         },
       };
       // Swaps a reading's wording for gentle, non-clinical wording (Mindfulness).
+      // ── Chart-built steps and near-term timing (shared by read(), nearTiming() and buildBT()) ──
+      // What a door says to do, how a star says to do it, who or what a deity brings.
+      const DOA = {
+          开: "approach the people involved, apply or ask for the decision",
+          休: "rest, recover and reconnect with the people around you",
+          生: "start or grow one concrete piece of the plan",
+          伤: "tackle the problem head-on and repair what is broken",
+          杜: "keep your plans private and protect what you already have",
+          景: "put your case in writing, present it or check the documents",
+          死: "close or let go of one specific thing that is not working",
+          惊: "double-check the details and prepare for surprises",
+        },
+        AVD = {
+          开: "pushing for a decision",
+          休: "relying on favours",
+          生: "spending or expanding",
+          伤: "confrontations",
+          杜: "hiding things that should be said",
+          景: "public statements and signing papers",
+          死: "starting anything new",
+          惊: "rushing in",
+        },
+        STS = {
+          蓬: "quietly, careful about what you share",
+          任: "steadily, step by step",
+          冲: "quickly and decisively",
+          辅: "with a mentor, a course or expert input",
+          英: "visibly, but keep emotions in check",
+          芮: "slowly, fixing one problem at a time",
+          柱: "expecting pushback, so bring facts",
+          心: "with a clear plan, the rules or a professional",
+          禽芮: "slowly and steadily",
+        },
+        WHO = {
+          符: ["With", "your boss or a senior person on your side"],
+          阴: ["With", "a quiet helper behind the scenes"],
+          合: ["With", "a partner, or by agreement"],
+          地: ["With", "patience; stay grounded"],
+          天: ["With", "a big-picture view; go public"],
+          蛇: ["Watch", "overthinking and rumours"],
+          虎: ["Watch", "pressure from a forceful person"],
+          玄: ["Watch", "hidden losses or dishonesty"],
+          陈: ["Watch", "delays"],
+          雀: ["Watch", "gossip; keep your paperwork in order"],
+        };
+      // One concrete step from a palace: door = action, star = how, deity = who, palace = where.
+      const stepAt = (p) => {
+        const w = WHO[DK[P[p].deity]];
+        return `${DOA[P[p].gate[0]]}. How: ${STS[skey(P[p])] || "steadily"}.${w ? ` ${w[0]}: ${w[1]}.` : ""} Where: ${DN[PAL[p][1]]} (Palace ${p}).`;
+      };
+      let NEST = 0;
+      const BRZ = "子丑寅卯辰巳午未申酉戌亥",
+        hLab = (h) => (h % 12 || 12) + (h < 12 ? " AM" : " PM"),
+        dLab = (d) =>
+          `${d.toLocaleDateString("en-GB", { weekday: "short" })} ${d.getDate()} ${d.toLocaleDateString("en-GB", { month: "short" })}`,
+        winLab = (d) => `${dLab(d)} ${hLab(d.getHours())}-${hLab((d.getHours() + 2) % 24)}`;
+      // Start time of the k-th two-hour window after the cast window (k = 0 is the cast window).
+      function winAt(k) {
+        const t0 = castDate();
+        let h0 = t0.getHours();
+        h0 = h0 % 2 ? h0 : h0 === 0 ? 23 : h0 - 1;
+        return new Date(
+          t0.getFullYear(),
+          t0.getMonth(),
+          t0.getDate() - (t0.getHours() === 0 ? 1 : 0),
+          h0 + 2 * k,
+          0,
+        );
+      }
+      // Runs fn(k) on the chart of each of the next n windows; restores the cast chart afterwards.
+      function scanWins(n, fn) {
+        const sv = [chart, P];
+        NEST++;
+        try {
+          for (let k = 1; k <= n; k++) {
+            const r = QM.calculate(winAt(k), { lateZiHourMode: "next-day" });
+            if (r.error) continue;
+            chart = r;
+            P = build(r);
+            if (fn(k) === false) break;
+          }
+        } finally {
+          chart = sv[0];
+          P = sv[1];
+          NEST--;
+        }
+      }
+      // When the hour void fills: the next window and the next day carrying a void branch.
+      function voidFill() {
+        const kong = (chart.info.kong || "").split(""),
+          t0 = castDate();
+        let wh = "",
+          dy = "";
+        for (let k = 0; k < 12 && !wh; k++) {
+          const d = winAt(k),
+            b = BRZ[((d.getHours() + 1) >> 1) % 12];
+          if (kong.includes(b)) wh = (k ? "" : "this window, ") + winLab(d);
+        }
+        for (let k = 0; k < 12 && !dy; k++) {
+          const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + k, 12, 0),
+            r = QM.calculate(d, { lateZiHourMode: "next-day" });
+          if (!r.error && kong.includes(r.info.siZhu.day[1]))
+            dy = k ? `${dLab(d)} (${k} day${k > 1 ? "s" : ""} away)` : "today";
+        }
+        return { kong: kong.join(""), wh, dy };
+      }
+      // Next Good window for a topic (or the nearest Mixed one) within the next 12 windows.
+      function nextWin(key) {
+        let good = "",
+          mixed = "";
+        scanWins(12, (k) => {
+          let v = "";
+          try {
+            v = read(key).verdict;
+          } catch (e) {}
+          if (v === "Favorable") good = winLab(winAt(k));
+          else if (v === "Mixed" && !mixed) mixed = winLab(winAt(k));
+          return !good;
+        });
+        return { good, mixed };
+      }
+      // Plain-English timing for a reading, nearest first.
+      function timingText(key, v, keyTags) {
+        const T = TOP[key],
+          out = [];
+        const L = T.label.toLowerCase();
+        if (v === "Favorable") out.push(`This window is good for ${L}, so act within it.`);
+        else {
+          const w = nextWin(key);
+          out.push(
+            w.good
+              ? `It gets better: the next good window for ${L} is ${w.good}.`
+              : v === "Mixed"
+                ? "No clearly better window comes in the next 24 hours, so small steps now are fine."
+                : w.mixed
+                  ? `No good window in the next 24 hours; it eases to mixed at ${w.mixed}.`
+                  : "No better window in the next 24 hours, so give it a day and cast again.",
+          );
+        }
+        if (/void/.test(keyTags)) {
+          const f = voidFill();
+          out.push(
+            `A key palace is empty (void), so it is not ready yet. It is likely to unlock ${f.wh ? "in the " + f.wh + " window" : "within a day"}${f.dy ? ", or more fully on " + f.dy : ""}.`,
+          );
+        }
+        if (/horse/.test(keyTags))
+          out.push("Movement is indicated: once it starts, it can move fast.");
+        return out.join(" ");
+      }
       function soften(R, v, keys) {
         const S = SOFT[v] || SOFT.Mixed,
           k = keys.find((x) => x[1] === "you");
         R.label = S.label;
         R.headline = S.headline;
-        R.actions = S.actions;
+        R.actions = [S.actions[0]].concat(R.actions.slice(0, 2));
         R.summary =
           "This reads your own palace" +
           (k ? " (Palace " + k[0] + ")" : "") +
           " together with the Rest door (calm and recovery) and the Life door (energy and growth).";
         R.timing =
-          "This chart reflects this moment only. Moods change, so check in again on another day rather than repeatedly today.";
+          (R.timing ? R.timing + " " : "") +
+          "Moods change, so check in again on another day rather than repeatedly today.";
         R.caution =
           "This is a reflective reading, not a diagnosis or a mental health assessment. If you feel unsafe, hopeless or in crisis, please contact a local crisis line, emergency services or someone you trust right away. A doctor or counsellor can also help.";
         return R;
@@ -2692,42 +2839,31 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             .map(Number)
             .filter((p) => p != 5),
           best = all.sort((a, b) => score(b) - score(a))[0];
-        const act = {
-          Favorable: [
-            "Take the lead and act soon rather than waiting.",
-            "Keep commitments clear, ideally in writing.",
-          ],
-          Mixed: [
-            "Go in small steps and check each stage first.",
-            "Prepare a backup for the weaker area below.",
-          ],
-          Wait: [
-            "Pause big decisions and gather more information.",
-            "Recast when you are ready to ask again.",
-          ],
-          Unfavorable: [
-            "Avoid committing resources for now.",
-            "Use the time to cut risks and strengthen your position.",
-          ],
-        }[v].slice();
-        act.push(`Most supportive direction: ${PAL[best][1]} (Palace ${best}: ${nm(best)}).`);
-        if (v !== "Favorable" && selfP && selfP != 5) {
-          const hl = all
-            .filter((p) => GEN[PE[p]] === PE[selfP])
-            .sort((x, y) => score(y) - score(x))[0];
-          if (hl)
-            act.push(
-              `To strengthen yourself, work from the ${DN[PAL[hl][1]]} (Palace ${hl}): it feeds your own palace, and its ${EN[P[hl].gate]} door points to ${DT[P[hl].gate[0]]}.`,
-            );
-        }
         const kp = keys.map((x) => x[0]),
-          tgs = kp.map((p) => P[p].tags.join("|")).join("|");
-        const timing = /horse/.test(tgs)
-          ? "Movement is indicated, so things may happen quickly. Be ready."
-          : /void/.test(tgs)
-            ? "A void palace is involved: expect delay or a reduced result."
-            : "This chart reflects this two-hour window. If things change, cast again.";
-        const worst = kp.slice().sort((a, b) => score(a) - score(b))[0];
+          tgs = kp.map((p) => P[p].tags.join("|")).join("|"),
+          worst = kp.slice().sort((a, b) => score(a) - score(b))[0];
+        const lead = (
+          T.soft
+            ? {
+                Favorable: "Keep going:",
+                Mixed: "One small step:",
+                Wait: "Go gently:",
+                Unfavorable: "Go gently:",
+              }
+            : {
+                Favorable: "Go ahead now:",
+                Mixed: "Move in small steps:",
+                Wait: "Prepare, but do not commit yet:",
+                Unfavorable: "Not now for the main move. Meanwhile,",
+              }
+        )[v];
+        const act = [`${lead} ${stepAt(doorP)}`];
+        if (best !== doorP) act.push(`Lean on the strongest palace: ${stepAt(best)}`);
+        if (worst !== best && worst !== doorP)
+          act.push(
+            `Around Palace ${worst} (${DN[PAL[worst][1]]}), avoid ${AVD[P[worst].gate[0]]}: it brings ${DX[DK[P[worst].deity]]}.`,
+          );
+        const timing = NEST ? "" : timingText(key, v, tgs);
         let caution = `Weakest point is Palace ${worst} (${nm(worst)}): ${DX[DK[P[worst].deity]]}${flags(worst)}.`;
         if (key === "health")
           caution += " This is not medical advice; please see a professional for health concerns.";
@@ -2750,11 +2886,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           why,
           max: T.extra ? 4 : 0,
           actions: act,
-          timing:
-            timing +
-            (v === "Wait" || v === "Unfavorable"
-              ? " If it is not urgent, open Find a better time on the Chart tab to choose a stronger window."
-              : ""),
+          timing,
           caution,
           reasoning,
         };
@@ -2779,54 +2911,19 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // Near-term timing worked out in code, so the AI never has to count calendar days or hours itself:
       // the next six two-hour windows rated for every topic, and the next hour and day that fill the hour void.
       function nearTiming() {
-        const t0 = castDate(),
-          BR = "子丑寅卯辰巳午未申酉戌亥",
-          kong = (chart.info.kong || "").split(""),
-          lb = (h) => (h % 12 || 12) + (h < 12 ? " AM" : " PM"),
-          dl = (d) =>
-            d.toLocaleDateString("en-GB", { weekday: "short", day: "numeric", month: "short" }),
-          hb = (h) => BR[((h + 1) >> 1) % 12],
-          sv = [chart, P],
-          out = [];
-        let h0 = t0.getHours();
-        h0 = h0 % 2 ? h0 : h0 === 0 ? 23 : h0 - 1;
-        try {
-          for (let k = 1; k <= 6; k++) {
-            const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate(), h0 + 2 * k, 0),
-              r = QM.calculate(d, { lateZiHourMode: "next-day" });
-            if (r.error) continue;
-            chart = r;
-            P = build(r);
-            const vs = Object.entries(TOP).map(([key, t]) => {
-              let v = "Mixed";
-              try {
-                v = read(key).verdict;
-              } catch (e) {}
-              return t.label + " " + SH[v];
-            });
-            out.push(
-              `${dl(d)} ${lb(d.getHours())}-${lb((d.getHours() + 2) % 24)}: ${vs.join(", ")}`,
-            );
-          }
-        } finally {
-          chart = sv[0];
-          P = sv[1];
-        }
-        let fillH = "";
-        for (let k = 0; k < 12 && !fillH; k++) {
-          const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate(), h0 + 2 * k, 0);
-          if (kong.includes(hb(d.getHours())))
-            fillH = `${k ? "" : "the current window, "}${dl(d)} ${lb(d.getHours())}-${lb((d.getHours() + 2) % 24)} (${hb(d.getHours())} hour)`;
-        }
-        let fillD = "";
-        for (let k = 0; k < 12 && !fillD; k++) {
-          const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + k, 12, 0),
-            r = QM.calculate(d, { lateZiHourMode: "next-day" });
-          const b = !r.error && r.info.siZhu.day[1];
-          if (b && kong.includes(b))
-            fillD = `${k ? dl(d) + ", " + k + " day" + (k > 1 ? "s" : "") + " away" : "today"} (${r.info.siZhu.day} day)`;
-        }
-        return `Near-term timing (computed from the cast time):\nNext two-hour windows, rated per topic: ${out.join(" | ")}.\nThe hour void ${kong.join("")} next fills in the window ${fillH || "not found"} and on the day ${fillD || "not found in 12 days"}.\n`;
+        const out = [];
+        scanWins(6, (k) => {
+          const vs = Object.entries(TOP).map(([key, t]) => {
+            let v = "Mixed";
+            try {
+              v = read(key).verdict;
+            } catch (e) {}
+            return t.label + " " + SH[v];
+          });
+          out.push(`${winLab(winAt(k))}: ${vs.join(", ")}`);
+        });
+        const f = voidFill();
+        return `Near-term timing (computed from the cast time):\nNext two-hour windows, rated per topic: ${out.join(" | ")}.\nThe hour void ${f.kong} next fills in the window ${f.wh || "not found"} and on the day ${f.dy || "not found in 12 days"}.\n`;
       }
       function chartText() {
         const r = chart,
@@ -3477,9 +3574,13 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
             chart = r;
             P = build(r);
             let v = "Mixed";
+            NEST++;
             try {
               v = read(BTK).verdict;
-            } catch (e) {}
+            } catch (e) {
+            } finally {
+              NEST--;
+            }
             rows.push([h, v]);
           }
         } finally {
