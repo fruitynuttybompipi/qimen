@@ -2580,7 +2580,25 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         hLab = (h) => (h % 12 || 12) + (h < 12 ? " AM" : " PM"),
         dLab = (d) =>
           `${d.toLocaleDateString("en-GB", { weekday: "short" })} ${d.getDate()} ${d.toLocaleDateString("en-GB", { month: "short" })}`,
-        winLab = (d) => `${dLab(d)} ${hLab(d.getHours())}-${hLab((d.getHours() + 2) % 24)}`;
+        // "today", "tomorrow" or "Fri 6 Nov", counted from the cast date.
+        dRel = (d) => {
+          const t0 = castDate(),
+            k = Math.round(
+              (new Date(d.getFullYear(), d.getMonth(), d.getDate()) -
+                new Date(t0.getFullYear(), t0.getMonth(), t0.getDate())) /
+                864e5,
+            );
+          return k === 0 ? "today" : k === 1 ? "tomorrow" : dLab(d);
+        },
+        // "7-9 AM" or "11 PM-1 AM"
+        hRange = (h) => {
+          const e = (h + 2) % 24,
+            ap = (x) => (x < 12 ? "AM" : "PM");
+          return ap(h) === ap(e)
+            ? `${h % 12 || 12}-${e % 12 || 12} ${ap(e)}`
+            : `${hLab(h)}-${hLab(e)}`;
+        },
+        winLab = (d) => `${dRel(d)} ${hRange(d.getHours())}`;
       // Start time of the k-th two-hour window after the cast window (k = 0 is the cast window).
       function winAt(k) {
         const t0 = castDate();
@@ -2627,7 +2645,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           const d = new Date(t0.getFullYear(), t0.getMonth(), t0.getDate() + k, 12, 0),
             r = QM.calculate(d, { lateZiHourMode: "next-day" });
           if (!r.error && kong.includes(r.info.siZhu.day[1]))
-            dy = k ? `${dLab(d)} (${k} day${k > 1 ? "s" : ""} away)` : "today";
+            dy = k === 0 ? "today" : k === 1 ? "tomorrow" : `${dLab(d)} (${k} days away)`;
         }
         return { kong: kong.join(""), wh, dy };
       }
@@ -2647,31 +2665,31 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
         return { good, mixed };
       }
       // Plain-English timing for a reading, nearest first.
+      // Plain timing: 1) the best slot coming up to do the step, 2) when the hard part should ease.
       function timingText(key, v, keyTags) {
         const T = TOP[key],
+          step = T.soft ? "your calming step" : "the first step",
+          hard = T.soft ? "This heavy feeling" : "This delay",
           out = [];
-        const L = T.label.toLowerCase();
-        if (v === "Favorable") out.push(`This window is good for ${L}, so act within it.`);
+        let w = { good: "", mixed: "" };
+        if (v === "Favorable") out.push(`Do ${step} now, in this two-hour slot; it is a good one.`);
         else {
-          const w = nextWin(key);
+          w = nextWin(key);
+          const slot = w.good || w.mixed;
           out.push(
-            w.good
-              ? `It gets better: the next good window for ${L} is ${w.good}.`
-              : v === "Mixed"
-                ? "No clearly better window comes in the next 24 hours, so small steps now are fine."
-                : w.mixed
-                  ? `No good window in the next 24 hours; it eases to mixed at ${w.mixed}.`
-                  : "No better window in the next 24 hours, so give it a day and cast again.",
+            slot
+              ? `Do ${step} ${slot}; that is the best slot coming up.`
+              : `No good slot in the next day, so rest on it and cast again tomorrow.`,
           );
         }
         if (/void/.test(keyTags)) {
           const f = voidFill();
-          out.push(
-            `A key palace is empty (void), so it is not ready yet. It is likely to unlock ${f.wh ? "in the " + f.wh + " window" : "within a day"}${f.dy ? ", or more fully on " + f.dy : ""}.`,
-          );
-        }
-        if (/horse/.test(keyTags))
-          out.push("Movement is indicated: once it starts, it can move fast.");
+          if (f.dy) out.push(`${hard} should ease by ${f.dy}, when the empty palace fills.`);
+          else if (f.wh)
+            out.push(`${hard} should start to ease from ${f.wh}, when the empty palace fills.`);
+        } else if (v !== "Favorable" && w.good)
+          out.push(`${hard} should start to ease from ${w.good}.`);
+        if (/horse/.test(keyTags)) out.push("Once it starts, things can move fast.");
         return out.join(" ");
       }
       function soften(R, v, keys) {
@@ -2684,9 +2702,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
           "This reads your own palace" +
           (k ? " (Palace " + k[0] + ")" : "") +
           " together with the Rest door (calm and recovery) and the Life door (energy and growth).";
-        R.timing =
-          (R.timing ? R.timing + " " : "") +
-          "Moods change, so check in again on another day rather than repeatedly today.";
+
         R.caution =
           "This is a reflective reading, not a diagnosis or a mental health assessment. If you feel unsafe, hopeless or in crisis, please contact a local crisis line, emergency services or someone you trust right away. A doctor or counsellor can also help.";
         return R;
@@ -2949,7 +2965,7 @@ ${l[2]}`:l[2]},I1=N.map(k=>({diPan:i1[k]??""})),R1=s1.map(k=>{let S=G(u.jiuXing,
       // Copies the chart and your question to the clipboard.
       function copyPrompt() {
         const q = $("q").value.trim() || "(write your question here)";
-        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet; it usually fills within hours or days (use the computed Near-term timing), and for big long-range matters it opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps built from the chart (door = kind of action, star = setting, deity = who helps, palace direction = where), then timing. For timing give the nearest first, using only the Near-term timing lines in the chart (the next two-hour window rated Good for my topic, or the nearest Mixed one if none is Good, and the hour and day the void fills); do not calculate dates yourself, and use direction months only for long-range life decisions.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
+        const t = `Read this Qimen Dunjia chart (shijia zhuanpan chaibu, Joey Yap school). Use the course rules: Course rules: the day stem is the asker and the hour stem the outcome; if the outcome feeds the asker it is positive, if it presses on the asker it is negative. Focus points: career = Open door, wealth = Life door plus the Wu stem (capital), a focus point in a void palace means unavailable or reduced. Geng is the problem stem; its deity shows the type of problem. Open, Rest and Life doors are auspicious, Delusion and Scenery neutral, Harm, Death and Fear inauspicious. Void and horse come from the hour pillar only. Also: death and emptiness (void) means not ready or not available yet; it usually fills within hours or days (use the computed Near-term timing), and for big long-range matters it opens around the months of its direction (N Dec, NE Jan-Feb, E Mar, SE Apr-May, S Jun, SW Jul-Aug, W Sep, NW Oct-Nov). The Chief stands for the boss. Stars show the setting: Pillar noisy, Heart rule-bound, Grass creative, Ambassador profit-driven, Destructor chaotic, Assistant academic, Hero cheerful, Grain large. The Open door home palace (north-west) is the current job and its present palace the new one. Rui (Grain) is illness; Heart is modern medicine, Yi traditional; the Open door can mean an operation. If the outcome feeds the asker, or shares the asker element, it can be had; if it presses on the asker, it cannot; if the asker feeds it, it is very hard; if the asker presses it, it costs something. A solution lies in the palace whose element feeds the asker. Read the outcome quality first, and do not read every palace. Look for special formations (Green Dragon Returns, Flying Bird Fall into Cave, Jade Maiden Watching the Door, Real, Double and Nobility Deception). Answer my question in plain English: a verdict first, then up to 3 reasons tied to palaces, then practical steps built from the chart (door = kind of action, star = setting, deity = who helps, palace direction = where), then timing in two short, plain sentences without jargon: first when to do the main step (the best slot coming up from the Near-term timing lines, for example \"Do your calming step tomorrow 7-9 AM; that is the best slot coming up.\"), then when the hard part should ease (the day the empty palace fills, for example \"This stuck feeling should ease by Fri 6 Nov, 4 days away.\"). Copy days and times from those lines; do not calculate dates yourself, and use months only for long-range life decisions.\n\nCHART:\n${chartText()}\n\nMY QUESTION: ${q}`;
         const b = $("copy"),
           label =
             '<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2" /><path d="M5 15V6a2 2 0 0 1 2-2h9" /></svg>' +
